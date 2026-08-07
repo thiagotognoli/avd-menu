@@ -171,6 +171,28 @@ slugify() {
     printf '%s' "$1" | tr '[:upper:]' '[:lower:]' | sed -e 's/[^a-z0-9]\+/-/g' -e 's/^-//' -e 's/-$//'
 }
 
+# Variáveis que forçam o uso da GPU dedicada, ou vazio se a máquina só tem uma.
+#
+# O emulador já escolhe a GPU discreta para o Vulkan, mas o caminho OpenGL ES
+# continua na GPU padrão (a integrada, em notebooks híbridos) — daí a diferença
+# de desempenho. As variáveis abaixo são as mesmas que o switcheroo-control usa.
+#
+# Não dá para juntar as duas famílias: em máquina AMD/Intel, definir
+# __GLX_VENDOR_LIBRARY_NAME=nvidia faz o libglvnd procurar libGLX_nvidia.so.0 e
+# quebrar o GLX. Por isso a escolha é feita aqui, na criação do atalho.
+detect_dgpu_env() {
+    local nodes
+    nodes="$(ls -1d /dev/dri/renderD* 2>/dev/null | wc -l)"
+    [ "${nodes:-0}" -gt 1 ] || return 1
+
+    if [ -d /proc/driver/nvidia ] \
+       || { command -v lspci >/dev/null 2>&1 && lspci 2>/dev/null | grep -qi nvidia; }; then
+        printf '%s' '__NV_PRIME_RENDER_OFFLOAD=1 __GLX_VENDOR_LIBRARY_NAME=nvidia __VK_LAYER_NV_optimus=NVIDIA_only'
+    else
+        printf '%s' 'DRI_PRIME=1'
+    fi
+}
+
 # Instala o ícone no tema hicolor do usuário e devolve o nome a usar em Icon=.
 # Se não conseguir instalar, devolve o caminho absoluto do arquivo original.
 install_icon() {
@@ -348,6 +370,15 @@ DESKTOP_ID="android-emulator-$SLUG"
 DESKTOP_FILE="$APPS_DIR/$DESKTOP_ID.desktop"
 ICON_NAME="$DESKTOP_ID"
 
+# O GNOME vincula a janela ao atalho comparando o WM_CLASS com StartupWMClass.
+# Sem isso o emulador abre um segundo ícone "genérico" na dock em vez de marcar
+# o ícone dos favoritos como em execução.
+#
+# Por padrão o emulador (Qt6/xcb) usa WM_CLASS = "qemu-system-x86_64","Emulator"
+# — igual para todos os AVDs. A variável RESOURCE_NAME, lida pelo plugin xcb do
+# Qt, troca a parte "instância" do WM_CLASS, dando um nome único por AVD.
+WM_CLASS_NAME="$DESKTOP_ID"
+
 # --- Remoção -------------------------------------------------------------
 if [ "$ACTION" = "remove" ]; then
     removed=0
@@ -384,6 +415,14 @@ DISPLAY_NAME="${DISPLAY_NAME:-Android Emulator $AVD_NAME}"
 # --------------------------------------------------------------------------
 ICON_VALUE="$(install_icon "$ICON_PATH" "$ICON_NAME")"
 
+# O GNOME oferece "Iniciar usando placa de vídeo dedicada" sozinho, mas só
+# enquanto considera o app parado — com o atalho agora vinculado à janela, o
+# item some assim que o emulador sobe. A ação abaixo fica sempre disponível.
+DGPU_ENV="$(detect_dgpu_env || true)"
+
+ACTIONS="cold-boot;wipe-data;"
+[ -n "$DGPU_ENV" ] && ACTIONS="gpu-dedicada;$ACTIONS"
+
 mkdir -p "$APPS_DIR"
 cat > "$DESKTOP_FILE" <<EOF
 [Desktop Entry]
@@ -392,22 +431,32 @@ Type=Application
 Name=$DISPLAY_NAME
 GenericName=Android Emulator
 Comment=Inicia o emulador Android $AVD_NAME
-Exec="$EMULATOR_BIN" -avd $AVD_NAME
+Exec=env RESOURCE_NAME=$WM_CLASS_NAME "$EMULATOR_BIN" -avd $AVD_NAME
 Icon=$ICON_VALUE
 Terminal=false
 Categories=Development;IDE;
 Keywords=android;emulator;avd;$AVD_NAME;
 StartupNotify=true
-Actions=cold-boot;wipe-data;
+StartupWMClass=$WM_CLASS_NAME
+Actions=$ACTIONS
 
 [Desktop Action cold-boot]
 Name=Iniciar com cold boot
-Exec="$EMULATOR_BIN" -avd $AVD_NAME -no-snapshot-load
+Exec=env RESOURCE_NAME=$WM_CLASS_NAME "$EMULATOR_BIN" -avd $AVD_NAME -no-snapshot-load
 
 [Desktop Action wipe-data]
 Name=Iniciar apagando os dados
-Exec="$EMULATOR_BIN" -avd $AVD_NAME -wipe-data
+Exec=env RESOURCE_NAME=$WM_CLASS_NAME "$EMULATOR_BIN" -avd $AVD_NAME -wipe-data
 EOF
+
+if [ -n "$DGPU_ENV" ]; then
+    cat >> "$DESKTOP_FILE" <<EOF
+
+[Desktop Action gpu-dedicada]
+Name=Iniciar com placa de vídeo dedicada
+Exec=env RESOURCE_NAME=$WM_CLASS_NAME $DGPU_ENV "$EMULATOR_BIN" -avd $AVD_NAME
+EOF
+fi
 
 chmod 644 "$DESKTOP_FILE"
 update-desktop-database "$APPS_DIR" >/dev/null 2>&1 || true
@@ -422,7 +471,8 @@ MSG="Atalho criado com sucesso.
 AVD:      $AVD_NAME
 Nome:     $DISPLAY_NAME
 Ícone:    $ICON_VALUE
-Arquivo:  $DESKTOP_FILE"
+Arquivo:  $DESKTOP_FILE
+GPU:      ${DGPU_ENV:-só uma GPU detectada — sem ação de vídeo dedicado}"
 
 if [ "$UI_MODE" -eq 1 ] && command -v zenity >/dev/null 2>&1; then
     zenity --info --width=460 --title="AVD Menu" --text="$MSG" 2>/dev/null || true
