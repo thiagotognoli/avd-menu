@@ -37,5 +37,7 @@ Darwin)
 *) die "sistema não suportado: $(uname -s)" ;;
 esac
 
-(cd dist && if command -v sha256sum >/dev/null 2>&1; then sha256sum *; else shasum -a 256 *; fi > SHA256SUMS)
+# a soma é calculada antes de criar o arquivo, para ele não listar a si mesmo
+(cd dist && sums="$(if command -v sha256sum >/dev/null 2>&1; then sha256sum *; else shasum -a 256 *; fi)" \
+    && printf '%s\n' "$sums" > SHA256SUMS)
 say "pronto:"; ls -la dist
