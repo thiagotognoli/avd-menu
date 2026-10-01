@@ -1,5 +1,32 @@
-// Textos da interface: cada chave tem [português, inglês].
+// Textos da interface: cada chave tem [português, inglês]; os demais idiomas ficam em
+// lang/<código>.js (chave → texto) e, sem a chave, caem para o inglês.
 import { emit } from './store.js';
+import zh from './lang/zh.js';
+import hi from './lang/hi.js';
+import es from './lang/es.js';
+import fr from './lang/fr.js';
+import ar from './lang/ar.js';
+import bn from './lang/bn.js';
+import ru from './lang/ru.js';
+import ur from './lang/ur.js';
+import id from './lang/id.js';
+
+const PACKS = { zh, hi, es, fr, ar, bn, ru, ur, id };
+
+/** Idiomas da interface, cada um no próprio nome. `rtl`: escrita da direita para a esquerda. */
+export const LANGUAGES = [
+  { code: 'pt', name: 'Português (Brasil)', html: 'pt-BR' },
+  { code: 'en', name: 'English', html: 'en' },
+  { code: 'zh', name: '中文（简体）', html: 'zh-CN' },
+  { code: 'hi', name: 'हिन्दी', html: 'hi' },
+  { code: 'es', name: 'Español', html: 'es' },
+  { code: 'fr', name: 'Français', html: 'fr' },
+  { code: 'ar', name: 'العربية', html: 'ar', rtl: true },
+  { code: 'bn', name: 'বাংলা', html: 'bn' },
+  { code: 'ru', name: 'Русский', html: 'ru' },
+  { code: 'ur', name: 'اردو', html: 'ur', rtl: true },
+  { code: 'id', name: 'Bahasa Indonesia', html: 'id' },
+];
 
 const S = {
   // gerais
@@ -161,14 +188,21 @@ let lang = 'pt';
 
 export function currentLang() { return lang; }
 
+/** Idioma pedido (`pref`, vazio = automático) ou, na falta, o do navegador/sistema; senão inglês. */
 export function detectLang(pref) {
-  if (pref === 'pt' || pref === 'en') return pref;
-  return (navigator.language || 'en').toLowerCase().startsWith('pt') ? 'pt' : 'en';
+  const known = (c) => LANGUAGES.find((l) => l.code === String(c || '').toLowerCase().split(/[-_]/)[0]);
+  if (pref && known(pref)) return known(pref).code;
+  for (const c of navigator.languages && navigator.languages.length ? navigator.languages : [navigator.language]) {
+    if (known(c)) return known(c).code;
+  }
+  return 'en';
 }
 
 export function initLang(pref) {
   lang = detectLang(pref);
-  document.documentElement.lang = lang === 'pt' ? 'pt-BR' : 'en';
+  const l = LANGUAGES.find((x) => x.code === lang);
+  document.documentElement.lang = l.html;
+  document.documentElement.dir = l.rtl ? 'rtl' : 'ltr';
 }
 
 export async function setLang(pref) {
@@ -182,7 +216,7 @@ export async function setLang(pref) {
 /** Traduz a chave, trocando {var} pelos valores de vars. Chave ausente = a própria chave. */
 export function t(key, vars) {
   const e = S[key];
-  let s = e ? e[lang === 'pt' ? 0 : 1] : key;
+  let s = !e ? key : lang === 'pt' ? e[0] : lang === 'en' ? e[1] : (PACKS[lang] && PACKS[lang][key]) || e[1];
   if (vars) s = s.replace(/\{(\w+)\}/g, (_, k) => (vars[k] !== undefined ? vars[k] : ''));
   return s;
 }

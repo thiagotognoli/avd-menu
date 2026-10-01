@@ -127,3 +127,17 @@ fn mac_bundle() {
     macos::remove("Pixel_9").unwrap();
     assert!(!PathBuf::from(&res2.path).exists());
 }
+
+#[test]
+fn desktop_entry_lines_are_localized() {
+    use super::linux::localized;
+    let name = localized("Name", "Iniciar com cold boot", "Cold boot", None);
+    assert!(name.contains(&"Name[pt_BR]=Iniciar com cold boot".to_string()), "{name:?}");
+    for prefix in ["Name[zh_CN]=", "Name[zh]=", "Name[ar]=", "Name[ur]="] {
+        assert!(name.iter().any(|l| l.starts_with(prefix)), "{prefix} em {name:?}");
+    }
+    assert!(!name.iter().any(|l| l.starts_with("Name[en")), "o inglês é a chave sem sufixo");
+    let comment = localized("Comment", "Inicia o emulador Android {}", "Starts the Android emulator {}", Some("Pixel_9"));
+    assert!(comment.iter().any(|l| l.starts_with("Comment[id]=")), "{comment:?}");
+    assert!(comment.iter().all(|l| l.contains("Pixel_9") && !l.contains("{}")), "{comment:?}");
+}

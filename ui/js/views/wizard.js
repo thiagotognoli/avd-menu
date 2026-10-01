@@ -1,5 +1,5 @@
 // Assistente "Create Virtual Device": hardware -> imagem de sistema -> configuração.
-import { h, icon, mount, fmtBytes, CATEGORY_ICON } from '../util.js';
+import { h, icon, mount, fmtBytes, ltr, CATEGORY_ICON } from '../util.js';
 import { state, on, loadDevices, loadPackages, loadAvds, taskFor, emit } from '../store.js';
 import { get, post, ApiError } from '../api.js';
 import { openModal, toast, errToast } from '../modal.js';
@@ -82,11 +82,11 @@ export async function openWizard() {
     const tbody = h('tbody');
     const fill = () => {
       mount(tbody, visible().map((d) => h('tr', { class: 'pick' + (W.device && W.device.id === d.id ? ' sel' : ''), onclick: () => { W.device = d; W.image = null; W.pkgs = null; fill(); refreshButtons(); }, ondblclick: () => go(1) },
-        h('td', null, h('b', null, d.name), d.user ? h('span', { class: 'pill info', style: { marginLeft: '8px' } }, t('wiz.custom')) : null, d.deprecated ? h('span', { class: 'pill', style: { marginLeft: '8px' } }, t('wiz.old')) : null),
+        h('td', null, h('b', null, d.name), d.user ? h('span', { class: 'pill info', style: { marginInlineStart: '8px' } }, t('wiz.custom')) : null, d.deprecated ? h('span', { class: 'pill', style: { marginInlineStart: '8px' } }, t('wiz.old')) : null),
         h('td', { style: { textAlign: 'center' } }, d.playstore ? h('span', { title: 'Google Play', style: { color: 'var(--primary)' } }, icon('store', 18)) : ''),
         h('td', { class: 'num' }, d.diag ? d.diag.toFixed(1) + '″' : '—'),
-        h('td', { class: 'num' }, `${d.w}×${d.h}`),
-        h('td', { class: 'num' }, `${d.density} dpi`))));
+        h('td', { class: 'num' }, ltr(`${d.w}×${d.h}`)),
+        h('td', { class: 'num' }, ltr(`${d.density} dpi`)))));
       if (!tbody.children.length) tbody.append(h('tr', null, h('td', { colspan: 5, class: 'muted', style: { padding: '24px', textAlign: 'center' } }, t('wiz.nodevices'))));
     };
     fill();
@@ -170,7 +170,7 @@ export async function openWizard() {
     const lists = imageLists();
     const cur = lists[W.tab] || [];
     const tabs = h('div', { class: 'tabs' }, [['recommended', t('wiz.tab.rec')], ['all', t('wiz.tab.all')], ['other', t('wiz.tab.other')]].map(([k, label]) =>
-      h('button', { class: W.tab === k ? 'on' : '', onclick: () => { W.tab = k; renderImages(); } }, label, h('span', { class: 'muted small', style: { marginLeft: '6px' } }, lists[k].length))));
+      h('button', { class: W.tab === k ? 'on' : '', onclick: () => { W.tab = k; renderImages(); } }, label, h('span', { class: 'muted small', style: { marginInlineStart: '6px' } }, lists[k].length))));
     const rows = cur.map((p) => {
       const task = taskFor(p.path);
       const sel = W.image && W.image.path === p.path;
@@ -182,7 +182,7 @@ export async function openWizard() {
       return h('tr', { class: 'pick' + (sel ? ' sel' : '') + (p.installed ? '' : ''), onclick: () => { W.image = p; renderImages(); refreshButtons(); } },
         h('td', null, h('b', null, p.apiName || 'API ' + p.api), h('div', { class: 'small muted' }, 'API ' + p.api + (p.ext ? ' · ext ' + p.ext : ''))),
         h('td', null, h('span', { class: 'tag-badge' }, p.playStore ? icon('store', 16) : null, p.tagDisplay || p.tag)),
-        h('td', null, p.abi, p.compat === 'slow' ? h('span', { class: 'pill warn', style: { marginLeft: '6px' }, title: t('wiz.slow.tip') }, t('wiz.slow')) : p.compat === 'no' ? h('span', { class: 'pill err', style: { marginLeft: '6px' } }, t('wiz.incompat')) : null),
+        h('td', null, p.abi, p.compat === 'slow' ? h('span', { class: 'pill warn', style: { marginInlineStart: '6px' }, title: t('wiz.slow.tip') }, t('wiz.slow')) : p.compat === 'no' ? h('span', { class: 'pill err', style: { marginInlineStart: '6px' } }, t('wiz.incompat')) : null),
         h('td', { class: 'num' }, fmtBytes(p.size)),
         h('td', { style: { width: '190px' } }, action));
     });
@@ -243,7 +243,7 @@ export async function openWizard() {
       h('div', { class: 'grow' }),
       h('div', { style: { alignSelf: 'center' } }, h('button', { class: 'btn outline sm', onclick: () => go(0) }, t('wiz.change.device')), ' ', h('button', { class: 'btn outline sm', onclick: () => go(1) }, t('wiz.change.image'))));
 
-    mount(bodyEl, h('div', { style: { overflow: 'auto', flex: 1, paddingRight: '4px' } }, summary,
+    mount(bodyEl, h('div', { style: { overflow: 'auto', flex: 1, paddingInlineEnd: '4px' } }, summary,
       h('div', { style: { marginTop: '18px' } }, W.form.el),
       state.info && state.info.shortcuts ? h('div', { class: 'card pad', style: { marginTop: '18px', boxShadow: 'none' } },
         h('label', { class: 'check' }, scCb, h('span', null, h('b', null, t('wiz.shortcut')), h('div', { class: 'muted small' }, t('wiz.shortcut.sub')))), scBox) : null));

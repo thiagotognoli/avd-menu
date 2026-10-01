@@ -6,6 +6,33 @@ use std::path::Path;
 use std::process::Command;
 use std::time::Duration;
 
+/// Linhas `Chave[locale]=texto` do .desktop para todos os idiomas traduzidos (o texto sem
+/// sufixo, em inglês, é o reserva). `arg` preenche o `{}` do modelo, se houver.
+pub(crate) fn localized(key: &str, pt: &str, en: &str, arg: Option<&str>) -> Vec<String> {
+    let mut out = vec![];
+    for code in crate::lang::LANGS {
+        if code == "en" {
+            continue;
+        }
+        let text = crate::lang::tr_in(code, pt, en);
+        if code != "pt" && text == en {
+            continue; // sem tradução: o reserva em inglês já cobre
+        }
+        let text = match arg {
+            Some(a) => crate::lang::format_dyn(&text, &[&a]),
+            None => text,
+        };
+        // pt_BR e zh_CN são o que os ambientes costumam pedir; o código curto é o reserva.
+        let locales: &[&str] = match code {
+            "pt" => &["pt", "pt_BR"],
+            "zh" => &["zh_CN", "zh"],
+            c => &[c],
+        };
+        out.extend(locales.iter().map(|l| format!("{key}[{l}]={text}")));
+    }
+    out
+}
+
 /// Regras de aspas do campo Exec do .desktop.
 pub(crate) fn exec_quote(arg: &str) -> String {
     if arg.is_empty() {
@@ -95,8 +122,9 @@ pub(crate) fn create(sdk: &Sdk, opt: &Options, name: &str, icon: &IconSource) ->
     w(format!("Name={name}"));
     w("GenericName=Android Emulator".into());
     w(format!("Comment=Starts the Android emulator {}", opt.avd));
-    w(format!("Comment[pt]=Inicia o emulador Android {}", opt.avd));
-    w(format!("Comment[pt_BR]=Inicia o emulador Android {}", opt.avd));
+    for l in localized("Comment", "Inicia o emulador Android {}", "Starts the Android emulator {}", Some(&opt.avd)) {
+        w(l);
+    }
     w(format!("Exec={}", line(&envs, &[])));
     w(format!("Icon={icon_name}"));
     w("Terminal=false".into());
@@ -109,14 +137,16 @@ pub(crate) fn create(sdk: &Sdk, opt: &Options, name: &str, icon: &IconSource) ->
     w(String::new());
     w("[Desktop Action cold-boot]".into());
     w("Name=Cold boot".into());
-    w("Name[pt]=Iniciar com cold boot".into());
-    w("Name[pt_BR]=Iniciar com cold boot".into());
+    for l in localized("Name", "Iniciar com cold boot", "Cold boot", None) {
+        w(l);
+    }
     w(format!("Exec={}", line(&envs, &["-no-snapshot-load"])));
     w(String::new());
     w("[Desktop Action wipe-data]".into());
     w("Name=Wipe data and start".into());
-    w("Name[pt]=Iniciar apagando os dados".into());
-    w("Name[pt_BR]=Iniciar apagando os dados".into());
+    for l in localized("Name", "Iniciar apagando os dados", "Wipe data and start", None) {
+        w(l);
+    }
     w(format!("Exec={}", line(&envs, &["-wipe-data"])));
     if !dgpu.is_empty() {
         // O GNOME oferece “Iniciar usando placa de vídeo dedicada” sozinho, mas só
@@ -127,8 +157,9 @@ pub(crate) fn create(sdk: &Sdk, opt: &Options, name: &str, icon: &IconSource) ->
         w(String::new());
         w("[Desktop Action gpu-dedicada]".into());
         w("Name=Start with dedicated GPU".into());
-        w("Name[pt]=Iniciar com placa de vídeo dedicada".into());
-        w("Name[pt_BR]=Iniciar com placa de vídeo dedicada".into());
+        for l in localized("Name", "Iniciar com placa de vídeo dedicada", "Start with dedicated GPU", None) {
+            w(l);
+        }
         w(format!("Exec={}", line(&denvs, &[])));
     }
     std::fs::create_dir_all(apps_dir())?;

@@ -20,7 +20,7 @@ export function setupCard() {
     h('div', null, h('b', null, label), sub ? h('div', { class: 'muted small' }, sub) : null));
   return h('div', { class: 'card pad', style: { marginBottom: '18px' } },
     h('div', { class: 'row', style: { alignItems: 'flex-start', gap: '18px' } },
-      h('div', { class: 'empty', style: { padding: 0, textAlign: 'left' } },
+      h('div', { class: 'empty', style: { padding: 0, textAlign: 'start' } },
         h('div', { class: 'big', style: { width: '64px', height: '64px', borderRadius: '18px', margin: 0 } }, icon('sdk', 32))),
       h('div', { class: 'grow', style: { display: 'flex', flexDirection: 'column', gap: '12px' } },
         h('div', null, h('h2', null, t('setup.title')), h('p', { class: 'muted' }, t('setup.intro'))),

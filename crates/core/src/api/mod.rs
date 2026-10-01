@@ -264,7 +264,7 @@ impl App {
 
     fn post_settings(&self, body: Value) -> Result<Value> {
         let show = body.get("showPreview").and_then(Value::as_bool);
-        let lang = body.get("lang").and_then(Value::as_str).map(str::to_string);
+        let lang = body.get("lang").and_then(Value::as_str).filter(|l| l.is_empty() || crate::lang::normalize(l).is_some()).map(str::to_string);
         let theme = body.get("theme").and_then(Value::as_str).map(str::to_string);
         config::update(|c| {
             if let Some(v) = show {

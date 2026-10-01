@@ -3,7 +3,7 @@ import { h, icon, mount } from '../util.js';
 import { get, post } from '../api.js';
 import { state, loadInfo, loadAvds, loadPackages, emit } from '../store.js';
 import { openModal, toast, errToast } from '../modal.js';
-import { t, setLang, currentLang } from '../i18n.js';
+import { t, setLang, currentLang, LANGUAGES } from '../i18n.js';
 
 /** Seleção do local do Android SDK, com navegador de pastas simples. */
 export function sdkLocationDialog() {
@@ -53,7 +53,7 @@ export function sdkLocationDialog() {
 export function settingsDialog() {
   const info = state.info;
   const langSel = h('select', { onchange: (e) => setLang(e.target.value) },
-    [['', t('settings.auto')], ['pt', 'Português'], ['en', 'English']].map(([v, l]) => h('option', { value: v, selected: v === (info.config.lang || '') || null }, l)));
+    [['', t('settings.auto')], ...LANGUAGES.map((l) => [l.code, l.name])].map(([v, l]) => h('option', { value: v, selected: v === (info.config.lang || '') || null }, l)));
   const themeSel = h('select', { onchange: async (e) => { await post('/api/settings', { theme: e.target.value }); applyTheme(e.target.value); info.config.theme = e.target.value; } },
     [['', t('settings.auto')], ['light', t('settings.light')], ['dark', t('settings.dark')]].map(([v, l]) => h('option', { value: v, selected: v === (info.config.theme || '') || null }, l)));
   const self = info.self && info.self.exists;

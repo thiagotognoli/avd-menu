@@ -34,12 +34,15 @@ export const $$ = (sel, root = document) => [...root.querySelectorAll(sel)];
 export function clear(el) { while (el.firstChild) el.removeChild(el.firstChild); return el; }
 export function mount(el, ...children) { clear(el); append(el, children); return el; }
 
+/** Mantém um valor com unidade (“420 dpi”, “1080×2424”) legível como um bloco em idiomas RTL. */
+export function ltr(s) { return '\u2066' + s + '\u2069'; }
+
 export function fmtBytes(n) {
   if (!n) return '—';
   const u = ['B', 'KB', 'MB', 'GB', 'TB'];
   let i = 0, v = n;
   while (v >= 1024 && i < u.length - 1) { v /= 1024; i++; }
-  return (v >= 100 || i === 0 ? v.toFixed(0) : v.toFixed(1)) + ' ' + u[i];
+  return ltr((v >= 100 || i === 0 ? v.toFixed(0) : v.toFixed(1)) + ' ' + u[i]);
 }
 
 export function debounce(fn, ms = 200) {
@@ -103,7 +106,7 @@ const ICONS = {
 /** Ícone SVG inline (herda a cor do texto). */
 export function icon(name, size = 20, cls = '') {
   const span = document.createElement('span');
-  span.className = 'ico ' + cls;
+  span.className = 'ico ' + cls + (name === 'chevron' ? ' mirror-rtl' : '');
   span.style.width = span.style.height = size + 'px';
   span.innerHTML = `<svg viewBox="0 0 24 24" width="${size}" height="${size}" aria-hidden="true"><path fill="currentColor" d="${ICONS[name] || ICONS.info}"/></svg>`;
   return span;

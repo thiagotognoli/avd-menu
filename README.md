@@ -6,7 +6,7 @@ Lista seus emuladores, inicia/para com um clique, cria dispositivos novos (escol
 
 Feito em **Rust + Tauri** (janela nativa com o WebView do sistema) e **JS puro** só na interface. Não há Go, Python nem Node no projeto: scripts em **bash**.
 
-> *English TL;DR:* a dependency-free Android emulator manager for Linux & macOS. Rust core + Tauri shell (native window, native title bar), plain-JS front-end, bash scripts. Talks to Google's SDK repository directly (no Java, no `sdkmanager`), creates AVDs the way Android Studio does, and adds launcher shortcuts to your desktop menu. UI is bilingual (pt-BR / en).
+> *English TL;DR:* a dependency-free Android emulator manager for Linux & macOS. Rust core + Tauri shell (native window, native title bar), plain-JS front-end, bash scripts. Talks to Google's SDK repository directly (no Java, no `sdkmanager`), creates AVDs the way Android Studio does, and adds launcher shortcuts to your desktop menu. The UI, CLI and menu shortcuts are localized in 11 languages (see *Idiomas*).
 
 ## Instalação
 
@@ -46,6 +46,18 @@ Para aparecer no menu de aplicativos do Linux: *Configurações (engrenagem) →
 | **Gráficos “Automático” de verdade** | o modo `-gpu auto` do emulador costuma cair para renderização por **software** em Linux com GPU boa (“Your GPU drivers may have a bug. Switching to software rendering”) — a janela do emulador fica lenta e “não responde”. O AVD Menu detecta driver de hardware (Mesa radv/anv, NVIDIA…) e inicia com `-gpu host`; a aba Diagnóstico mostra o que está sendo usado |
 | **Diagnóstico** | KVM/Hypervisor, bibliotecas faltando (com o comando do `apt`/`dnf`/`pacman`), GPUs, modo gráfico, espaço em disco |
 | **Compatível com o Android Studio** | usa `~/.android/avd` e grava os mesmos `package.xml` e `licenses/` — AVDs e SDK criados aqui aparecem no Studio e no `sdkmanager`, e vice-versa |
+
+## Idiomas
+
+A interface, as mensagens, a ajuda da linha de comando e os itens dos atalhos do menu estão traduzidos em 11 idiomas: **Português (Brasil)**, **English**, **中文（简体）**, **हिन्दी**, **Español**, **Français**, **العربية**, **বাংলা**, **Русский**, **اردو** e **Bahasa Indonesia**. Árabe e urdu são exibidos da direita para a esquerda.
+
+O idioma segue o do sistema (`LANG`/navegador); para trocar, use *Configurações → Idioma*. Texto sem tradução cai para o inglês.
+
+Para **acrescentar ou corrigir um idioma** (`xx` = código ISO 639-1):
+
+1. `ui/js/lang/xx.js` — copie um existente e traduza os valores (uma entrada por linha; mantenha as chaves e as `{variáveis}`); registre o idioma em `LANGUAGES` e no `import` de `ui/js/i18n.js` (`rtl: true` se for escrito da direita para a esquerda).
+2. `crates/core/data/i18n/xx.json` — mensagens do núcleo e da linha de comando: *texto em inglês → tradução* (mantenha `{}`, `{:?}` e `{v}`; para mudar a ordem use `{0}`, `{1}`…); registre em `LANGS` e em `raw_catalog` (`crates/core/src/lang.rs`).
+3. `./x test` confere se não falta chave e se as variáveis batem com o original.
 
 ## Linha de comando
 

@@ -1,5 +1,5 @@
 // Tela principal: lista de dispositivos virtuais (Device Manager).
-import { h, icon, mount, fmtBytes, CATEGORY_ICON } from '../util.js';
+import { h, icon, mount, fmtBytes, ltr, CATEGORY_ICON } from '../util.js';
 import { state, on, loadAvds, loadInfo } from '../store.js';
 import { popMenu, errToast } from '../modal.js';
 import { t } from '../i18n.js';
@@ -82,7 +82,7 @@ function row(a) {
     h('div', { class: 'thumb' }, icon(cat, 26), a.shortcut && a.shortcut.exists ? h('span', { class: 'sc', title: t('shortcut.exists') }, icon('shortcut', 12)) : null),
     h('div', { style: { minWidth: 0 } },
       h('div', { class: 'name', title: a.displayName }, a.displayName),
-      h('div', { class: 'sub' }, [a.deviceName, a.width && a.height ? `${a.width}×${a.height}` : '', a.density ? `${a.density} dpi` : ''].filter(Boolean).join(' · '))),
+      h('div', { class: 'sub' }, [a.deviceName, a.width && a.height ? ltr(`${a.width}×${a.height}`) : '', a.density ? ltr(`${a.density} dpi`) : ''].filter(Boolean).join(' · '))),
     h('div', { class: 'c-api' }, h('b', null, a.api ? 'API ' + a.api : '—'), h('div', { class: 'sub' }, a.apiName || '')),
     h('div', { class: 'c-tag' }, h('span', { class: 'tag-badge' }, a.playStore ? icon('store', 16) : null, a.tagDisplay || a.tag || ''), h('div', { class: 'sub' }, a.abi || '')),
     h('div', { class: 'c-size muted' }, fmtBytes(a.sizeBytes)),

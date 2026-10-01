@@ -81,11 +81,11 @@ export function mountSdk(root) {
     const label = p.type === 'sysimg' ? `${p.tagDisplay || p.tag} · ${p.abi}` : p.name;
     return h('tr', { class: p.compat === 'no' ? 'dim' : '' },
       h('td', { style: { width: '42px', textAlign: 'center' } }, checkbox(p)),
-      h('td', { style: { paddingLeft: (12 + indent * 22) + 'px' } },
+      h('td', { style: { paddingInlineStart: (12 + indent * 22) + 'px' } },
         h('span', { class: 'tag-badge' }, p.type === 'sysimg' && p.playStore ? icon('store', 16) : null, h('b', { style: { fontWeight: indent ? 550 : 650 } }, label)),
         h('div', { class: 'small muted' }, p.path)),
-      h('td', null, p.installed ? p.installedRevision : p.revision, p.channel && p.channel !== 'stable' ? h('span', { class: 'pill warn', style: { marginLeft: '6px' } }, p.channel) : null,
-        p.compat === 'slow' ? h('span', { class: 'pill warn', style: { marginLeft: '6px' }, title: t('wiz.slow.tip') }, t('wiz.slow')) : null),
+      h('td', null, p.installed ? p.installedRevision : p.revision, p.channel && p.channel !== 'stable' ? h('span', { class: 'pill warn', style: { marginInlineStart: '6px' } }, p.channel) : null,
+        p.compat === 'slow' ? h('span', { class: 'pill warn', style: { marginInlineStart: '6px' }, title: t('wiz.slow.tip') }, t('wiz.slow')) : null),
       h('td', null, statusCell(p)),
       h('td', { class: 'num muted' }, p.size ? fmtBytes(p.size) : ''));
   }
@@ -95,7 +95,7 @@ export function mountSdk(root) {
     const inst = items.filter((i) => i.installed).length;
     return h('tr', { class: 'group', onclick: () => { open ? openSet.delete(key) : openSet.add(key); render(); } },
       h('td', { style: { textAlign: 'center' } }, icon(open ? 'expand' : 'chevron', 20)),
-      h('td', { colspan: 2 }, label, sub ? h('span', { class: 'muted small', style: { marginLeft: '10px', fontWeight: 500 } }, sub) : null),
+      h('td', { colspan: 2 }, label, sub ? h('span', { class: 'muted small', style: { marginInlineStart: '10px', fontWeight: 500 } }, sub) : null),
       h('td', null, inst ? h('span', { class: 'pill ok' }, t('sdk.n.installed', { n: inst })) : ''),
       h('td'));
   }
@@ -160,7 +160,7 @@ export function mountSdk(root) {
     const rem = [...pending].filter(([, v]) => v === 'uninstall').map(([k]) => k);
     if (rem.length) {
       const ok = await confirmDialog({ title: t('sdk.remove.title'), message: t('sdk.remove.msg', { n: rem.length }), confirm: t('remove'), danger: true,
-        details: h('ul', { class: 'small', style: { margin: '10px 0 0', paddingLeft: '18px' } }, rem.map((p) => h('li', null, p))) });
+        details: h('ul', { class: 'small', style: { margin: '10px 0 0', paddingInlineStart: '18px' } }, rem.map((p) => h('li', null, p))) });
       if (!ok) return;
     }
     if (rem.length) await uninstallPackages(rem);

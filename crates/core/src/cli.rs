@@ -6,11 +6,8 @@ use crate::{avd, config, emu, platform, shortcut, Cancel};
 use std::collections::{BTreeMap, BTreeSet};
 use std::io::{BufRead, Write};
 
-fn usage() -> String {
-    let v = platform::version();
-    if crate::lang::is_pt() {
-        format!(
-            r#"AVD Menu {v} — gerenciador de emuladores Android
+/// Texto de ajuda; `{v}` vira a versão. Os outros idiomas ficam nos catálogos (data/i18n).
+const HELP_PT: &str = r#"AVD Menu {v} — gerenciador de emuladores Android
 
 USO:
   avd-menu [ui]                      Abre a interface gráfica (padrão)
@@ -36,11 +33,8 @@ OPÇÕES GLOBAIS:
   --sdk CAMINHO    Usa este Android SDK nesta execução (padrão: detecta ou ~/Applications/AndroidSDK)
 
 Sem argumentos o programa abre a interface numa janela própria.
-"#
-        )
-    } else {
-        format!(
-            r#"AVD Menu {v} — Android emulator manager
+"#;
+const HELP_EN: &str = r#"AVD Menu {v} — Android emulator manager
 
 USAGE:
   avd-menu [ui]                      Open the graphical interface (default)
@@ -66,9 +60,10 @@ GLOBAL OPTIONS:
   --sdk PATH       Use this Android SDK for this run (default: auto-detect or ~/Applications/AndroidSDK)
 
 Without arguments the program opens the interface in its own window.
-"#
-        )
-    }
+"#;
+
+fn usage() -> String {
+    tr(HELP_PT, HELP_EN).replace("{v}", platform::version())
 }
 
 fn fail(msg: impl AsRef<str>) -> i32 {
