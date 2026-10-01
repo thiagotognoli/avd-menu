@@ -33,7 +33,7 @@ USO:
   avd-menu version                   Mostra a versão
 
 OPÇÕES GLOBAIS:
-  --sdk CAMINHO    Usa este Android SDK nesta execução (padrão: detecta ou ~/Android/Sdk)
+  --sdk CAMINHO    Usa este Android SDK nesta execução (padrão: detecta ou ~/Applications/AndroidSDK)
 
 Sem argumentos o programa abre a interface numa janela própria.
 "#
@@ -63,7 +63,7 @@ USAGE:
   avd-menu version                   Print the version
 
 GLOBAL OPTIONS:
-  --sdk PATH       Use this Android SDK for this run (default: auto-detect or ~/Android/Sdk)
+  --sdk PATH       Use this Android SDK for this run (default: auto-detect or ~/Applications/AndroidSDK)
 
 Without arguments the program opens the interface in its own window.
 "#

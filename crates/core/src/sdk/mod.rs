@@ -34,13 +34,10 @@ pub struct Candidate {
     pub adb: bool,
 }
 
-/// Local padrão para criar um SDK novo (o mesmo do Android Studio).
+/// Local padrão para criar um SDK novo (Linux e macOS). SDKs que já existem em outros
+/// lugares — inclusive o padrão do Android Studio — continuam sendo detectados.
 pub fn default_root() -> PathBuf {
-    if platform::is_mac() {
-        platform::home().join("Library/Android/sdk")
-    } else {
-        platform::home().join("Android/Sdk")
-    }
+    platform::home().join("Applications/AndroidSDK")
 }
 
 impl Sdk {
@@ -93,6 +90,7 @@ pub fn candidates(configured: &str) -> Vec<Candidate> {
             }
         }
     }
+    push(default_root(), "default");
     push(home.join("Android/Sdk"), "Android Studio default");
     push(home.join("Library/Android/sdk"), "Android Studio default (macOS)");
     push(home.join("Applications/Android/Sdk"), "known location");
@@ -163,4 +161,32 @@ pub fn detect(configured: &str) -> Sdk {
 
 fn looks_like_sdk(root: &Path) -> bool {
     ["platforms", "platform-tools", "system-images", "cmdline-tools", "build-tools", "licenses"].iter().any(|d| platform::dir_exists(&root.join(d)))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn new_sdk_goes_to_applications_android_sdk_and_is_found_afterwards() {
+        let _g = crate::testutil::env_lock();
+        let home = crate::testutil::tmp("sdk-default");
+        // sem SDK no PATH nem nas variáveis (a máquina de quem roda o teste pode ter um)
+        let old_path = std::env::var_os("PATH");
+        std::env::set_var("PATH", &home);
+        std::env::set_var("HOME", &home);
+        for v in ["ANDROID_SDK_ROOT", "ANDROID_HOME"] {
+            std::env::remove_var(v);
+        }
+        assert_eq!(default_root(), home.join("Applications/AndroidSDK"));
+        // ainda não existe: o padrão é devolvido como destino da instalação
+        assert_eq!(detect("").root, home.join("Applications/AndroidSDK"));
+        // depois de criado com o conteúdo de um SDK, é detectado sozinho
+        std::fs::create_dir_all(default_root().join("platform-tools")).unwrap();
+        assert!(candidates("").iter().any(|c| c.path == default_root().to_string_lossy() && c.exists));
+        assert_eq!(detect("").root, default_root());
+        if let Some(p) = old_path {
+            std::env::set_var("PATH", p);
+        }
+    }
 }

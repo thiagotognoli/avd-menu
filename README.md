@@ -31,7 +31,7 @@ Para aparecer no menu de aplicativos do Linux: *Configurações (engrenagem) →
 
 ## Primeiro uso
 
-1. Abra o AVD Menu. Sem Android SDK ele mostra um cartão **“Vamos preparar o Android SDK”**: um clique baixa o *Android Emulator* e o *Platform-Tools* (≈ 330 MB) para `~/Android/Sdk` (ou use o SDK do Android Studio — ele é detectado sozinho).
+1. Abra o AVD Menu. Sem Android SDK ele mostra um cartão **“Vamos preparar o Android SDK”**: um clique baixa o *Android Emulator* e o *Platform-Tools* (≈ 330 MB) para `~/Applications/AndroidSDK` (ou use o SDK do Android Studio — ele é detectado sozinho).
 2. **Criar dispositivo** → escolha o aparelho (Pixel 10, Pixel Fold, tablets, Wear OS, TV, Automotive…) → a versão do Android (imagens não instaladas têm botão *Baixar*) → ajuste as opções e *Concluir*.
 3. **Iniciar**. No menu `⋮`: *cold boot*, *apagar dados*, *GPU dedicada*, *sem janela*, editar, duplicar, log, **criar atalho no menu**, excluir.
 

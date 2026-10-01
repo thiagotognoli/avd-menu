@@ -1,6 +1,6 @@
 //! Tarefas de manutenção do projeto (`cargo xtask <comando>`), em Rust.
 //!
-//!   cargo xtask gen-devices --sdk ~/Android/Sdk [--oracle-dir DIR] [--out ARQ]
+//!   cargo xtask gen-devices --sdk ~/Applications/AndroidSDK [--oracle-dir DIR] [--out ARQ]
 //!
 //! `gen-devices` gera crates/core/data/devices.json a partir do SDK:
 //!   1. extrai do jar do cmdline-tools os XMLs de definição de aparelhos do Android
