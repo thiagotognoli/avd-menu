@@ -10,6 +10,10 @@
 #
 # O nome do AVD é obrigatório no modo linha de comando.
 # Se o ícone não for informado, usa ./android-icon.svg (ao lado do script).
+#
+# NOTA: este script foi substituído pelo AVD Menu (app em Rust + Tauri, sem dependências,
+# com interface própria, SDK Manager e criação de emuladores) — veja o README.md.
+# Ele continua funcionando e os atalhos que ele cria são reconhecidos pelo app.
 
 set -euo pipefail
 

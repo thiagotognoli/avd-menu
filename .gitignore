@@ -1,0 +1,8 @@
+# toolchains e bibliotecas baixadas localmente pelos scripts (não versionar)
+/.tools/
+# build
+/target/
+/dist/
+# pastas de trabalho
+.claude/
+src-tauri/gen/
