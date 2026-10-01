@@ -27,6 +27,7 @@ Linux)
         tar -czf "dist/avd-menu-v${VERSION}-linux-x86_64.tar.gz" -C target/release avd-menu
     ;;
 Darwin)
+    ensure_rustup
     rustup target add aarch64-apple-darwin x86_64-apple-darwin
     cargo tauri build --target universal-apple-darwin --bundles app,dmg
     B="target/universal-apple-darwin/release/bundle"

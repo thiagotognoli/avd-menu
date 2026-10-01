@@ -14,3 +14,14 @@ fi
 
 say() { printf '\033[1m==>\033[0m %s\n' "$*"; }
 die() { printf 'erro: %s\n' "$*" >&2; exit 1; }
+
+# Garante o rustup em .tools/. Um Rust de gerenciador de pacotes (Homebrew, apt) traz só o
+# alvo nativo e não tem `rustup target add`, que o binário universal do macOS exige.
+ensure_rustup() {
+    command -v rustup >/dev/null 2>&1 && return 0
+    say "Instalando o rustup em .tools/ …"
+    mkdir -p "$ROOT/.tools"
+    curl -fsSL https://sh.rustup.rs -o "$ROOT/.tools/rustup-init.sh"
+    sh "$ROOT/.tools/rustup-init.sh" -y --no-modify-path --profile minimal --default-toolchain stable
+    hash -r
+}

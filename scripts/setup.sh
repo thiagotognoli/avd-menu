@@ -7,12 +7,7 @@ set -euo pipefail
 . "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
 cd "$ROOT"
 
-if ! command -v rustc >/dev/null 2>&1; then
-    say "Instalando o Rust em .tools/ …"
-    mkdir -p .tools
-    curl -fsSL https://sh.rustup.rs -o .tools/rustup-init.sh
-    sh .tools/rustup-init.sh -y --no-modify-path --profile minimal --default-toolchain stable
-fi
+command -v rustc >/dev/null 2>&1 || ensure_rustup
 say "$(rustc --version)"
 
 if [ "$(uname -s)" = "Linux" ]; then
