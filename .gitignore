@@ -6,3 +6,4 @@
 # pastas de trabalho
 .claude/
 src-tauri/gen/
+.DS_Store
