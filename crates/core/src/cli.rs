@@ -286,7 +286,11 @@ fn cmd_create(args: &[String]) -> i32 {
     spec.settings.display_name = p.val("display-name").map(str::to_string);
     spec.settings.ram_mb = p.val("ram").and_then(|v| v.parse().ok());
     spec.settings.cores = p.val("cores").and_then(|v| v.parse().ok());
-    match avd::create(&current_sdk(), &spec) {
+    let sdk = current_sdk();
+    if let Err(e) = avd::fetch_skin_for_create(&sdk, &spec) {
+        eprintln!("{}", e.message);
+    }
+    match avd::create(&sdk, &spec) {
         Ok(a) => {
             println!("{}: {} ({}, API {})\n  {}", tr("AVD criado", "AVD created"), a.name, a.device_name, a.api, a.dir);
             0

@@ -66,8 +66,13 @@ impl App {
     pub(super) fn create_avd(&self, body: Value) -> Result<Value> {
         let spec: CreateSpec = de(body.clone())?;
         let sd = self.sdk();
+        // a moldura é enfeite: sem rede o AVD sai igual e a moldura é tentada de novo ao iniciar
+        let skin_error = avd::fetch_skin_for_create(&sd, &spec).err();
         let a = avd::create(&sd, &spec)?;
         let mut resp = json!({"avd": a});
+        if let Some(e) = skin_error {
+            resp["skinError"] = json!(e.message);
+        }
         if let Some(sc) = body.get("shortcut").filter(|v| v.is_object()) {
             let opt = shortcut::Options {
                 avd: a.name.clone(),
@@ -105,8 +110,15 @@ impl App {
         name_ok(name)?;
         let st: Settings = de(body)?;
         stop_first(name, "pare o emulador antes de editar o AVD", "stop the emulator before editing the AVD")?;
-        avd::update(name, &st)?;
-        Ok(ok())
+        let sd = self.sdk();
+        // sem rede as outras opções são salvas do mesmo jeito; a moldura fica para a próxima
+        let skin_error = avd::fetch_skin_for_update(&sd, name, &st).err();
+        avd::update(&sd, name, &st)?;
+        let mut resp = ok();
+        if let Some(e) = skin_error {
+            resp["skinError"] = json!(e.message);
+        }
+        Ok(resp)
     }
 
     pub(super) fn delete_avd(&self, name: &str) -> Result<Value> {

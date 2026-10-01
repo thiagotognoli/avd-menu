@@ -3,8 +3,9 @@
 
 pub mod create;
 pub mod ini;
+pub mod skin;
 
-pub use create::{build_config, create, update, view_of, write_raw_config, CreateSpec, Settings, View};
+pub use create::{build_config, create, fetch_skin_for_create, fetch_skin_for_update, update, view_of, write_raw_config, CreateSpec, Settings, View};
 pub use ini::Ini;
 
 use crate::sdk::{self, Sdk};

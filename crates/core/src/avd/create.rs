@@ -2,7 +2,7 @@
 //! avdmanager gera para cada aparelho + as da imagem de sistema + os ajustes.
 
 use super::ini::Ini;
-use super::{avd_dir, home, load, parse_mb, valid_name, write_avd_ini, Avd};
+use super::{avd_dir, home, load, parse_mb, skin, valid_name, write_avd_ini, Avd};
 use crate::devices::{self, Device};
 use crate::sdk::{Sdk, SysImageProps};
 use crate::{Error, Result};
@@ -195,18 +195,41 @@ pub fn view_of(cfg: &Ini, name: &str) -> View {
         gpu_mode: or_default(cfg.get("hw.gpu.mode"), "auto"),
         boot_mode: if cfg.get("fastboot.forceColdBoot") == "yes" { "cold" } else { "quick" }.to_string(),
         keyboard: cfg.get("hw.keyboard") == "yes",
-        show_frame: cfg.get("showDeviceFrame") != "no",
+        show_frame: cfg.get("showDeviceFrame") == "yes",
     }
 }
 
-/// Altera as opções de um AVD existente.
-pub fn update(name: &str, st: &Settings) -> Result<()> {
+/// Altera as opções de um AVD existente. A moldura só é ligada se a skin já está no SDK
+/// (`skin::download`, que usa a rede, fica a cargo de quem chama).
+pub fn update(sdk: &Sdk, name: &str, st: &Settings) -> Result<()> {
     let dir = avd_dir(name)?;
     let p = dir.join("config.ini");
     let mut cfg = Ini::read(&p)?;
     st.apply(&mut cfg)?;
+    skin::sync(&mut cfg, sdk);
     std::fs::write(&p, cfg.to_text())?;
     Ok(())
+}
+
+/// Baixa a moldura que o AVD vai precisar depois de aplicar `st` (se faltar).
+pub fn fetch_skin_for_update(sdk: &Sdk, name: &str, st: &Settings) -> Result<()> {
+    let (mut cfg, _) = super::config(name)?;
+    st.apply(&mut cfg)?;
+    match skin::missing(&cfg, sdk) {
+        Some(id) => skin::download(sdk, &id),
+        None => Ok(()),
+    }
+}
+
+/// Baixa a moldura do aparelho de um AVD novo (se ele tem uma e a moldura está ligada).
+pub fn fetch_skin_for_create(sdk: &Sdk, spec: &CreateSpec) -> Result<()> {
+    if spec.settings.show_frame == Some(false) {
+        return Ok(());
+    }
+    match devices::get(&spec.device_id).and_then(|d| d.skin) {
+        Some(id) if !skin::installed(sdk, &id) => skin::download(sdk, &id),
+        _ => Ok(()),
+    }
 }
 
 /// Substitui o config.ini inteiro (editor avançado), guardando um backup em config.ini.bak.
@@ -322,7 +345,8 @@ pub fn create(sdk: &Sdk, spec: &CreateSpec) -> Result<Avd> {
     if dir.exists() {
         return Err(bad!("a pasta {} já existe", "the folder {} already exists", dir.display()));
     }
-    let cfg = build_config(&dev, &img, spec)?;
+    let mut cfg = build_config(&dev, &img, spec)?;
+    skin::sync(&mut cfg, sdk);
     std::fs::create_dir_all(&dir)?;
     if let Err(e) = std::fs::write(dir.join("config.ini"), cfg.to_sorted_text()) {
         let _ = std::fs::remove_dir_all(&dir);

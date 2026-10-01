@@ -259,6 +259,7 @@ export async function openWizard() {
       const r = await post('/api/avds', body);
       toast(t('wiz.created', { name: r.avd.displayName }), 'ok');
       if (r.shortcutError) toast(r.shortcutError, 'err');
+      if (r.skinError) toast(r.skinError, 'err');
       modal.close();
       await loadAvds();
       if (W.startAfter) startAvd(r.avd);

@@ -7,6 +7,43 @@ use std::os::unix::fs::PermissionsExt;
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex, MutexGuard};
 
+/// Gitiles de mentira com a skin `pixel_9` (layout + duas imagens). Devolve a URL base.
+fn serve_skins() -> String {
+    use base64::Engine;
+    use sha1::{Digest, Sha1};
+    use std::io::{BufRead, BufReader, Write};
+    let files: Vec<(&str, Vec<u8>)> = vec![("layout", b"parts {}\n".to_vec()), ("back.webp", vec![1; 64]), ("mask.webp", vec![2; 32])];
+    let b64 = |d: &[u8]| base64::engine::general_purpose::STANDARD.encode(d);
+    let l = std::net::TcpListener::bind("127.0.0.1:0").unwrap();
+    let url = format!("http://127.0.0.1:{}", l.local_addr().unwrap().port());
+    std::thread::spawn(move || {
+        for mut s in l.incoming().flatten() {
+            let mut line = String::new();
+            let mut rd = BufReader::new(s.try_clone().unwrap());
+            rd.read_line(&mut line).unwrap();
+            while rd.read_line(&mut String::new()).unwrap_or(0) > 2 {}
+            let path = line.split_whitespace().nth(1).unwrap_or("").trim_start_matches('/').split('?').next().unwrap().to_string();
+            let body = if path == "pixel_9/" {
+                let rows: Vec<String> = files
+                    .iter()
+                    .map(|(n, d)| {
+                        format!("100644 blob {}\t{n}", hex::encode(Sha1::new().chain_update(format!("blob {}\0", d.len())).chain_update(d).finalize()))
+                    })
+                    .collect();
+                Some(b64((rows.join("\n") + "\n").as_bytes()))
+            } else {
+                path.strip_prefix("pixel_9/").and_then(|n| files.iter().find(|(f, _)| *f == n)).map(|(_, d)| b64(d))
+            };
+            let resp = match body {
+                Some(b) => format!("HTTP/1.1 200 OK\r\nContent-Length: {}\r\nConnection: close\r\n\r\n{b}", b.len()),
+                None => "HTTP/1.1 404 Not Found\r\nContent-Length: 0\r\nConnection: close\r\n\r\n".into(),
+            };
+            let _ = s.write_all(resp.as_bytes());
+        }
+    });
+    url
+}
+
 static ENV: Mutex<()> = Mutex::new(());
 
 fn tmp(name: &str) -> PathBuf {
@@ -37,6 +74,8 @@ fn setup() -> Env {
         std::env::set_var(k, t.join(v));
     }
     std::env::set_var("PATH", "/usr/bin:/bin");
+    // molduras: nunca sai para a internet nos testes (porta fechada = falha na hora)
+    std::env::set_var("AVD_MENU_SKINS_URL", "http://127.0.0.1:1");
     std::env::remove_var("ANDROID_SDK_ROOT");
     std::env::remove_var("ANDROID_HOME");
     let root = t.join("sdk");
@@ -184,4 +223,44 @@ fn uninstall_only_installed_packages() {
     assert_eq!(e.call("POST", "/api/packages/uninstall", json!({"paths": ["licenses"]})).unwrap_err().status, 400);
     assert_eq!(e.call("POST", "/api/packages/uninstall", json!({"paths": []})).unwrap_err().status, 400);
     let _: &Path = &e.root;
+}
+
+#[test]
+fn device_frame_is_downloaded_attached_and_hidden() {
+    let e = setup();
+    let avd_home = PathBuf::from(std::env::var_os("ANDROID_AVD_HOME").unwrap());
+    let keys = || {
+        let c = std::fs::read_to_string(avd_home.join("Frame.avd/config.ini")).unwrap();
+        let get = |k: &str| c.lines().find_map(|l| l.strip_prefix(&format!("{k}="))).unwrap_or("").to_string();
+        (get("showDeviceFrame"), get("skin.name"), get("skin.path"))
+    };
+    let skin = e.root.join("skins/pixel_9");
+
+    // sem rede: o AVD é criado mesmo assim, avisando que a moldura não veio
+    let r = e.ok("POST", "/api/avds", json!({"name": "Frame", "deviceId": "pixel_9", "imagePkg": IMG}));
+    assert!(r["skinError"].as_str().is_some_and(|m| m.contains("pixel_9")), "{r}");
+    assert_eq!(keys(), ("yes".into(), "".into(), "".into()));
+    // salvar sem rede grava as outras opções e avisa da moldura
+    let r = e.ok("PUT", "/api/avds/Frame", json!({"showFrame": true, "cores": 3}));
+    assert!(r["skinError"].as_str().is_some_and(|m| m.contains("pixel_9")), "{r}");
+    assert_eq!(keys().1, "");
+    assert_eq!(e.ok("GET", "/api/avds/Frame", Value::Null)["settings"]["cores"], 3);
+
+    // com a origem no ar, salvar o formulário baixa a skin e aponta o AVD para ela
+    std::env::set_var("AVD_MENU_SKINS_URL", serve_skins());
+    e.ok("PUT", "/api/avds/Frame", json!({"showFrame": true}));
+    assert!(skin.join("layout").is_file() && skin.join("back.webp").is_file());
+    assert_eq!(keys(), ("yes".into(), "pixel_9".into(), skin.to_string_lossy().into()));
+    assert_eq!(e.ok("GET", "/api/avds/Frame", Value::Null)["settings"]["showFrame"], true);
+
+    // desmarcar esconde de verdade: o emulador só obedece skin.path
+    e.ok("PUT", "/api/avds/Frame", json!({"showFrame": false}));
+    assert_eq!(keys(), ("no".into(), "1080x2424".into(), "_no_skin".into()));
+    assert_eq!(e.ok("GET", "/api/avds/Frame", Value::Null)["settings"]["showFrame"], false);
+
+    // AVD novo, com a skin já no SDK, nasce com moldura
+    e.ok("DELETE", "/api/avds/Frame", Value::Null);
+    let r = e.ok("POST", "/api/avds", json!({"name": "Frame", "deviceId": "pixel_9", "imagePkg": IMG}));
+    assert!(r.get("skinError").is_none(), "{r}");
+    assert_eq!(keys(), ("yes".into(), "pixel_9".into(), skin.to_string_lossy().into()));
 }

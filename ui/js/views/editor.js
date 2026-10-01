@@ -39,12 +39,14 @@ export async function openEditor(a) {
     footer: [h('button', { class: 'btn ghost', onclick: () => m.close() }, t('cancel')),
       h('button', { class: 'btn primary', onclick: async () => {
         try {
+          let skinError = '';
           if (tab === 'raw') await put(`/api/avds/${name}/raw`, { content: raw.value });
           else {
-            await put(`/api/avds/${name}`, form.value());
+            skinError = (await put(`/api/avds/${name}`, form.value())).skinError;
             await put(`/api/avds/${name}/args`, { args: args.value });
           }
           toast(t('edit.saved'), 'ok');
+          if (skinError) toast(skinError, 'err');
           m.close(); await loadAvds();
         } catch (e) { errToast(e); }
       } }, icon('check', 18), t('save'))],

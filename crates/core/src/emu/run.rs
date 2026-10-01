@@ -198,6 +198,10 @@ pub fn start_watched(sdk: &Sdk, name: &str, opt: &StartOptions, on_early_exit: O
     let mut logf = std::fs::File::create(&log)?;
     use std::io::Write;
     let _ = writeln!(logf, "$ {} {}", bin.display(), args.join(" "));
+    // Moldura do aparelho: baixa a skin que falta e acerta skin.path no config.ini.
+    if let Err(e) = avd::skin::prepare(sdk, name) {
+        let _ = writeln!(logf, "avd-menu: {e}");
+    }
     let mut cmd = Command::new(&bin);
     cmd.args(&args)
         .current_dir(bin.parent().unwrap())

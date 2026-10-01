@@ -89,14 +89,15 @@ fn create_list_update_duplicate_delete() {
 
     // edição
     update(
+        &sdk,
         "Meu_Pixel",
         &Settings { gpu_mode: Some("host".into()), boot_mode: Some("cold".into()), keyboard: Some(true), sd_card_mb: Some(1024), ..Default::default() },
     )
     .unwrap();
     let v = view_of(&config("Meu_Pixel").unwrap().0, "Meu_Pixel");
     assert_eq!((v.gpu_mode.as_str(), v.boot_mode.as_str(), v.keyboard, v.sd_card_mb, v.ram_mb, v.cores), ("host", "cold", true, 1024, 4096, 6));
-    assert!(update("Meu_Pixel", &Settings { gpu_mode: Some("banana".into()), ..Default::default() }).is_err());
-    update("Meu_Pixel", &Settings { sd_card_mb: Some(0), ..Default::default() }).unwrap();
+    assert!(update(&sdk, "Meu_Pixel", &Settings { gpu_mode: Some("banana".into()), ..Default::default() }).is_err());
+    update(&sdk, "Meu_Pixel", &Settings { sd_card_mb: Some(0), ..Default::default() }).unwrap();
     let c = config("Meu_Pixel").unwrap().0;
     assert_eq!(c.get("hw.sdCard"), "no");
     assert!(!c.has("sdcard.size"));
@@ -148,4 +149,61 @@ fn raw_config_keeps_backup() {
     write_raw_config("A", &cfg.to_text()).unwrap();
     assert!(PathBuf::from(&a.dir).join("config.ini.bak").exists());
     assert_eq!(config("A").unwrap().0.get("hw.ramSize"), "1234");
+}
+
+#[test]
+fn device_frame_follows_the_checkbox() {
+    let _g = crate::testutil::env_lock();
+    let (sdk, _) = fake_sdk();
+    let spec = |frame: Option<bool>| CreateSpec {
+        name: "Moldura".into(),
+        device_id: "pixel_8".into(),
+        image_pkg: IMG.into(),
+        settings: Settings { show_frame: frame, ..Default::default() },
+    };
+    let skin_keys = || {
+        let c = config("Moldura").unwrap().0;
+        (c.get("showDeviceFrame").to_string(), c.get("skin.name").to_string(), c.get("skin.path").to_string())
+    };
+
+    // moldura ligada, mas a skin ainda não foi baixada: o AVD sai sem skin.* (o emulador
+    // desenharia uma tela lisa), e `missing` diz o que falta
+    create(&sdk, &spec(None)).unwrap();
+    assert_eq!(skin_keys(), ("yes".into(), "".into(), "".into()));
+    assert!(view_of(&config("Moldura").unwrap().0, "Moldura").show_frame);
+    assert_eq!(skin::missing(&config("Moldura").unwrap().0, &sdk).as_deref(), Some("pixel_8"));
+
+    // com a skin no SDK, salvar o formulário passa a apontar para ela
+    let dir = skin::root(&sdk).join("pixel_8");
+    fs::create_dir_all(&dir).unwrap();
+    fs::write(dir.join("layout"), "parts {}").unwrap();
+    update(&sdk, "Moldura", &Settings { show_frame: Some(true), ..Default::default() }).unwrap();
+    assert_eq!(skin_keys(), ("yes".into(), "pixel_8".into(), dir.to_string_lossy().into()));
+
+    // desmarcar de fato esconde (o emulador só obedece skin.path)
+    update(&sdk, "Moldura", &Settings { show_frame: Some(false), ..Default::default() }).unwrap();
+    assert_eq!(skin_keys(), ("no".into(), "1080x2400".into(), "_no_skin".into()));
+    assert!(!view_of(&config("Moldura").unwrap().0, "Moldura").show_frame);
+    // outras edições não mexem na moldura
+    update(&sdk, "Moldura", &Settings { cores: Some(2), ..Default::default() }).unwrap();
+    assert_eq!(skin_keys().2, "_no_skin");
+    // e marcar de novo volta
+    update(&sdk, "Moldura", &Settings { show_frame: Some(true), ..Default::default() }).unwrap();
+    assert_eq!(skin_keys(), ("yes".into(), "pixel_8".into(), dir.to_string_lossy().into()));
+    delete("Moldura").unwrap();
+
+    // AVD novo com a skin já instalada nasce com a moldura; sem moldura nasce sem skin
+    create(&sdk, &spec(None)).unwrap();
+    assert_eq!(skin_keys(), ("yes".into(), "pixel_8".into(), dir.to_string_lossy().into()));
+    delete("Moldura").unwrap();
+    create(&sdk, &spec(Some(false))).unwrap();
+    assert_eq!(skin_keys(), ("no".into(), "".into(), "".into()));
+    assert!(!view_of(&config("Moldura").unwrap().0, "Moldura").show_frame);
+    delete("Moldura").unwrap();
+
+    // o que falta baixar: só quando a moldura está ligada e o aparelho tem skin
+    fs::remove_dir_all(&dir).unwrap();
+    assert!(fetch_skin_for_create(&sdk, &spec(Some(false))).is_ok(), "moldura desligada não baixa nada");
+    let generic = CreateSpec { device_id: "medium_phone".into(), ..spec(None) };
+    assert!(fetch_skin_for_create(&sdk, &generic).is_ok(), "aparelho sem skin não baixa nada");
 }
