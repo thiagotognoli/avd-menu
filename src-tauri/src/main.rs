@@ -41,6 +41,7 @@ fn main() {
         }
     });
     core.spawn_poller();
+    core.spawn_shortcut_refresh();
 
     let result = tauri::Builder::default()
         .plugin(tauri_plugin_single_instance::init(|app, _args, _cwd| {

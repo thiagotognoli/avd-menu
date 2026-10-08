@@ -124,5 +124,6 @@
  "Cold boot": "کولڈ بوٹ",
  "Wipe data and start": "ڈیٹا صاف کر کے شروع کریں",
  "Start with dedicated GPU": "ڈیڈیکیٹڈ GPU کے ساتھ شروع کریں",
- "Starts the Android emulator {}": "Android ایمولیٹر {} شروع کرتا ہے"
+ "Starts the Android emulator {}": "Android ایمولیٹر {} شروع کرتا ہے",
+ "Cold boot with dedicated GPU": "ڈیڈیکیٹڈ GPU کے ساتھ کولڈ بوٹ"
 }

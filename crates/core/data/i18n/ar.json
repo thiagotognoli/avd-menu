@@ -124,5 +124,6 @@
  "Cold boot": "تشغيل بارد",
  "Wipe data and start": "مسح البيانات والتشغيل",
  "Start with dedicated GPU": "تشغيل باستخدام GPU مخصصة",
- "Starts the Android emulator {}": "يشغّل محاكي Android {}"
+ "Starts the Android emulator {}": "يشغّل محاكي Android {}",
+ "Cold boot with dedicated GPU": "تشغيل بارد باستخدام GPU مخصصة"
 }

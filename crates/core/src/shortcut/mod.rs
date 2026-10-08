@@ -158,6 +158,16 @@ pub fn create(sdk: &Sdk, opt: &Options) -> Result<CreateResult> {
     }
 }
 
+/// Regrava o atalho que já existe (mesmo nome, ícone e lugar na dock) se ele
+/// não reflete mais o AVD e esta máquina: opções de inicialização, placas de
+/// vídeo, ações novas de uma versão mais nova. Devolve se regravou.
+pub fn refresh(sdk: &Sdk, avd_name: &str) -> Result<bool> {
+    if !platform::is_linux() || !avd::valid_name(avd_name) {
+        return Ok(false);
+    }
+    linux::refresh(sdk, avd_name)
+}
+
 /// Remove o atalho de um AVD (e o ícone instalado).
 pub fn remove(avd_name: &str) -> Result<()> {
     if platform::is_mac() {

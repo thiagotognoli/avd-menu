@@ -33,7 +33,7 @@ Para aparecer no menu de aplicativos do Linux: *Configurações (engrenagem) →
 
 1. Abra o AVD Menu. Sem Android SDK ele mostra um cartão **“Vamos preparar o Android SDK”**: um clique baixa o *Android Emulator* e o *Platform-Tools* (≈ 330 MB) para `~/Applications/AndroidSDK` (ou use o SDK do Android Studio — ele é detectado sozinho).
 2. **Criar dispositivo** → escolha o aparelho (Pixel 10, Pixel Fold, tablets, Wear OS, TV, Automotive…) → a versão do Android (imagens não instaladas têm botão *Baixar*) → ajuste as opções e *Concluir*.
-3. **Iniciar**. No menu `⋮`: *cold boot*, *apagar dados*, *GPU dedicada*, *sem janela*, editar, duplicar, log, **criar atalho no menu**, excluir.
+3. **Iniciar**. No menu `⋮`: *cold boot*, *apagar dados*, *GPU dedicada* (com ou sem cold boot), *sem janela*, editar, duplicar, log, **criar atalho no menu**, excluir.
 
 ## O que tem
 
@@ -42,7 +42,7 @@ Para aparecer no menu de aplicativos do Linux: *Configurações (engrenagem) →
 | **Device Manager** | lista com estado em tempo real, iniciar/parar, cold boot, wipe data, duplicar, editar (RAM, heap, CPUs, armazenamento, cartão SD, câmeras, rede, gráficos, teclado, moldura), editor de `config.ini`, argumentos extras do emulador por AVD, log da execução |
 | **Criar dispositivo** | ~95 perfis de hardware oficiais (as mesmas definições do Android Studio) + perfis próprios; imagens *Recomendadas / Todas compatíveis / Outras* filtradas pelo tipo de aparelho e pela arquitetura do computador |
 | **SDK Manager** | plataformas, imagens de sistema, emulador, platform-tools, build-tools, cmdline-tools, NDK, CMake… instalar/atualizar/remover com download retomável, checagem SHA-1 e licenças |
-| **Atalhos** | Linux: `.desktop` com `StartupWMClass` (a janela do emulador se vincula ao ícone na dock), ações *cold boot / apagar dados / GPU dedicada*, ícone próprio, fixar na dock do GNOME. macOS: `.app` em `~/Applications` |
+| **Atalhos** | Linux: `.desktop` com `StartupWMClass` (a janela do emulador se vincula ao ícone na dock), ações *cold boot / apagar dados / GPU dedicada / cold boot na GPU dedicada*, ícone próprio, fixar na dock do GNOME; o AVD Menu atualiza os atalhos já criados ao abrir e ao editar o AVD. macOS: `.app` em `~/Applications` |
 | **Gráficos “Automático” de verdade** | o modo `-gpu auto` do emulador costuma cair para renderização por **software** em Linux com GPU boa (“Your GPU drivers may have a bug. Switching to software rendering”) — a janela do emulador fica lenta e “não responde”. O AVD Menu detecta driver de hardware (Mesa radv/anv, NVIDIA…) e inicia com `-gpu host`; a aba Diagnóstico mostra o que está sendo usado |
 | **Moldura do aparelho** | o emulador só desenha a moldura (Pixel, Nexus, Wear OS, TV…) se o AVD aponta uma *skin* em `skin.path`; `showDeviceFrame` ele ignora. O AVD Menu baixa a skin do aparelho (espelho do Studio no AOSP, revisão fixa, cada arquivo conferido pelo hash do git) para `<sdk>/skins/<nome>`, onde o Studio também as guarda, e liga/desliga a moldura de verdade (`skin.path=_no_skin`). Aparelhos genéricos (*Medium Phone*, *Resizable*…) não têm moldura. `AVD_MENU_SKINS_URL` troca a origem do download |
 | **Diagnóstico** | KVM/Hypervisor, bibliotecas faltando (com o comando do `apt`/`dnf`/`pacman`), GPUs, modo gráfico, espaço em disco |
@@ -137,8 +137,10 @@ git tag v1.0.0 && git push origin v1.0.0
 | “Aceleração por hardware indisponível” | `sudo usermod -aG kvm $USER` e relogar; confira VT-x/AMD-V na BIOS |
 | O emulador fecha logo ao iniciar | *Ver log* no menu `⋮` do dispositivo (ou aba Diagnóstico → bibliotecas faltando) |
 | O emulador está lento / “não está respondendo” | Diagnóstico → *Gráficos*. Se o modo estiver em software, edite o AVD → Gráficos → **Hardware** |
-| Atalho criado por outra versão continua lento | recrie-o (menu `⋮` → *Criar atalho no menu*): só os atalhos novos levam o `-gpu host` automático |
+| Atalho criado por outra versão continua lento | abra o AVD Menu uma vez: ele regrava os atalhos existentes (mesmo nome e ícone) com as opções atuais |
 | Notebook com 2 GPUs lento | menu `⋮` → *Iniciar com GPU dedicada* (o atalho do menu tem a mesma ação) |
+| 2 GPUs: travadas, “não está respondendo” | o emulador punha o OpenGL na placa dos monitores e o Vulkan na dedicada; o AVD Menu agora prende os dois na mesma placa (`DRI_PRIME` + `MESA_VK_DEVICE_SELECT`). Ao trocar de placa use *cold boot*: o snapshot guarda o estado gráfico da placa em que foi salvo |
+| Demora para abrir/fechar com snapshot de GBs | editar o AVD → Inicialização: *cold boot* (não carrega nem grava o snapshot: `-no-snapshot`) |
 | Janela em branco no Linux (NVIDIA) | o app já define `WEBKIT_DISABLE_DMABUF_RENDERER=1`; se persistir, abra uma issue com `avd-menu` rodando no terminal |
 
 ## Histórico

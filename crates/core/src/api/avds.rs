@@ -114,6 +114,8 @@ impl App {
         // sem rede as outras opções são salvas do mesmo jeito; a moldura fica para a próxima
         let skin_error = avd::fetch_skin_for_update(&sd, name, &st).err();
         avd::update(&sd, name, &st)?;
+        // o atalho leva as opções de inicialização na linha de comando
+        let _ = shortcut::refresh(&sd, name);
         let mut resp = ok();
         if let Some(e) = skin_error {
             resp["skinError"] = json!(e.message);

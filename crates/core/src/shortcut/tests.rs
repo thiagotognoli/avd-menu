@@ -84,6 +84,37 @@ fn linux_create_and_remove() {
 }
 
 #[test]
+fn refresh_follows_the_boot_mode() {
+    if !platform::is_linux() {
+        return;
+    }
+    let _g = crate::testutil::env_lock();
+    let (sdk, data) = setup();
+    assert!(!refresh(&sdk, "My_AVD").unwrap(), "sem atalho não cria nenhum");
+    assert!(!data.join("applications/android-emulator-my-avd.desktop").exists());
+    let url = format!("data:image/png;base64,{}", base64::engine::general_purpose::STANDARD.encode(png_data(8)));
+    let res = create(&sdk, &Options { avd: "My_AVD".into(), display_name: "Meu Emulador".into(), icon_data: url, ..Default::default() }).unwrap();
+    let icon = data.join("icons/hicolor/256x256/apps/android-emulator-my-avd.png");
+    let before = fs::read(&icon).unwrap();
+    assert!(!fs::read_to_string(&res.path).unwrap().contains("-no-snapshot "), "quick boot é o padrão");
+    assert!(!refresh(&sdk, "My_AVD").unwrap(), "nada mudou, nada a regravar");
+
+    avd::update(&sdk, "My_AVD", &avd::Settings { boot_mode: Some("cold".into()), ..Default::default() }).unwrap();
+    assert!(refresh(&sdk, "My_AVD").unwrap());
+    let txt = fs::read_to_string(&res.path).unwrap();
+    assert!(txt.contains("Name=Meu Emulador"), "{txt}");
+    assert_eq!(fs::read(&icon).unwrap(), before, "o ícone customizado fica");
+    let execs: Vec<&str> = txt.lines().filter(|l| l.starts_with("Exec=")).collect();
+    assert!(execs.len() >= 3 && execs.iter().all(|l| l.ends_with(" -no-snapshot") || l.contains(" -no-snapshot ")), "{txt}");
+
+    avd::update(&sdk, "My_AVD", &avd::Settings { boot_mode: Some("quick".into()), ..Default::default() }).unwrap();
+    refresh(&sdk, "My_AVD").unwrap();
+    let txt = fs::read_to_string(&res.path).unwrap();
+    assert!(!txt.lines().any(|l| l.starts_with("Exec=") && l.split(' ').any(|a| a == "-no-snapshot")), "{txt}");
+    remove("My_AVD").unwrap();
+}
+
+#[test]
 fn self_install() {
     if !platform::is_linux() {
         return;

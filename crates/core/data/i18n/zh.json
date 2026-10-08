@@ -124,5 +124,6 @@
  "Cold boot": "冷启动",
  "Wipe data and start": "清除数据并启动",
  "Start with dedicated GPU": "使用独立 GPU 启动",
- "Starts the Android emulator {}": "启动 Android 模拟器 {}"
+ "Starts the Android emulator {}": "启动 Android 模拟器 {}",
+ "Cold boot with dedicated GPU": "使用独立 GPU 冷启动"
 }

@@ -137,6 +137,11 @@ pub fn read_log_tail(name: &str, n: usize) -> String {
     lines[from..].join("\n")
 }
 
+/// O AVD está em “cold boot” (inicialização rápida desligada)?
+pub fn quickboot_off(name: &str) -> bool {
+    avd::config(name).map(|(c, _)| c.get("fastboot.forceColdBoot") == "yes").unwrap_or(false)
+}
+
 /// Argumentos do emulador para o AVD, com o modo gráfico “automático” resolvido
 /// (ver `prefer_host_gpu`).
 pub fn build_args(name: &str, opt: &StartOptions) -> Vec<String> {
@@ -145,6 +150,12 @@ pub fn build_args(name: &str, opt: &StartOptions) -> Vec<String> {
         "cold" => args.push("-no-snapshot-load".into()),
         "wipe" => args.push("-wipe-data".into()),
         _ => {}
+    }
+    // Com fastboot.forceColdBoot o emulador não carrega o snapshot, mas continua
+    // gravando a RAM inteira (GBs) ao fechar — lento, e se for morto no meio o
+    // snapshot fica corrompido. -no-snapshot desliga as duas pontas.
+    if quickboot_off(name) && !opt.extra_args.iter().any(|a| a.starts_with("-no-snapshot") || a == "-snapshot") {
+        args.push("-no-snapshot".into());
     }
     if opt.headless {
         args.push("-no-window".into());
@@ -211,10 +222,9 @@ pub fn start_watched(sdk: &Sdk, name: &str, opt: &StartOptions, on_early_exit: O
         .stdout(logf.try_clone()?)
         .stderr(logf);
     platform::clean_env(&mut cmd);
-    if opt.gpu == "dedicated" {
-        for (k, v) in super::gpu::dedicated_gpu_env() {
-            cmd.env(k, v);
-        }
+    // OpenGL e Vulkan na mesma placa (a dedicada, se pedida; senão a dos monitores)
+    for (k, v) in super::gpu::gpu_env(opt.gpu == "dedicated") {
+        cmd.env(k, v);
     }
     // Nova sessão: o emulador sobrevive ao fechamento do AVD Menu / do terminal.
     unsafe {

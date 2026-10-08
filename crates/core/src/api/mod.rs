@@ -116,6 +116,18 @@ impl App {
         });
     }
 
+    /// Em segundo plano, atualiza os atalhos já criados (versões novas trazem
+    /// ações e variáveis novas; a máquina pode ter ganhado uma placa de vídeo).
+    pub fn spawn_shortcut_refresh(self: &Arc<Self>) {
+        let app = self.clone();
+        std::thread::spawn(move || {
+            let sd = app.sdk();
+            for a in avd::list(&sd) {
+                let _ = shortcut::refresh(&sd, &a.name);
+            }
+        });
+    }
+
     pub fn broadcast_running(&self) {
         self.emit("running", serde_json::to_value(emu::running()).unwrap_or(Value::Null));
     }

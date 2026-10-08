@@ -124,5 +124,6 @@
  "Cold boot": "Cold boot",
  "Wipe data and start": "Hapus data lalu mulai",
  "Start with dedicated GPU": "Mulai dengan GPU khusus",
- "Starts the Android emulator {}": "Memulai emulator Android {}"
+ "Starts the Android emulator {}": "Memulai emulator Android {}",
+ "Cold boot with dedicated GPU": "Cold boot dengan GPU khusus"
 }

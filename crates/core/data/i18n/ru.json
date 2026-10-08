@@ -124,5 +124,6 @@
  "Cold boot": "Холодная загрузка",
  "Wipe data and start": "Стереть данные и запустить",
  "Start with dedicated GPU": "Запустить с дискретным GPU",
- "Starts the Android emulator {}": "Запускает эмулятор Android {}"
+ "Starts the Android emulator {}": "Запускает эмулятор Android {}",
+ "Cold boot with dedicated GPU": "Холодная загрузка с дискретным GPU"
 }

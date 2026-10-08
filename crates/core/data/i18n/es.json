@@ -124,5 +124,6 @@
  "Cold boot": "Arranque en frío",
  "Wipe data and start": "Borrar datos e iniciar",
  "Start with dedicated GPU": "Iniciar con GPU dedicada",
- "Starts the Android emulator {}": "Inicia el emulador Android {}"
+ "Starts the Android emulator {}": "Inicia el emulador Android {}",
+ "Cold boot with dedicated GPU": "Arranque en frío con GPU dedicada"
 }

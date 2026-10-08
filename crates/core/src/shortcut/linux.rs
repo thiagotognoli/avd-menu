@@ -77,6 +77,43 @@ pub(crate) fn install_icon(src: &IconSource, name: &str) -> Result<String> {
 pub(crate) fn create(sdk: &Sdk, opt: &Options, name: &str, icon: &IconSource) -> Result<CreateResult> {
     let id = desktop_id(&opt.avd);
     let icon_name = install_icon(icon, &id)?;
+    let (b, gpu_action) = render(sdk, &opt.avd, name, &icon_name);
+    std::fs::create_dir_all(apps_dir())?;
+    let path = apps_dir().join(format!("{id}.desktop"));
+    std::fs::write(&path, b)?;
+    validate(&path);
+    refresh_caches();
+    let mut res = CreateResult { path: path.to_string_lossy().into_owned(), display_name: name.to_string(), icon: icon_name, pinned: false, gpu_action };
+    if opt.pin {
+        res.pinned = gnome::pin(&format!("{id}.desktop"));
+    }
+    Ok(res)
+}
+
+/// Regrava o .desktop que já existe (mesmo nome e ícone) se o conteúdo mudou —
+/// opções de inicialização do AVD, placas de vídeo, ações novas. Devolve se regravou.
+pub(crate) fn refresh(sdk: &Sdk, avd_name: &str) -> Result<bool> {
+    let path = apps_dir().join(format!("{}.desktop", desktop_id(avd_name)));
+    let Ok(old) = std::fs::read_to_string(&path) else { return Ok(false) };
+    let (name, icon) = (desktop_value(&path, "Name"), desktop_value(&path, "Icon"));
+    if name.is_empty() || icon.is_empty() {
+        return Ok(false);
+    }
+    let (b, _) = render(sdk, avd_name, &name, &icon);
+    if b == old {
+        return Ok(false);
+    }
+    std::fs::write(&path, b)?;
+    validate(&path);
+    if let Some(p) = platform::which("update-desktop-database") {
+        let _ = output_with_timeout(Command::new(p).arg(apps_dir()), Duration::from_secs(10));
+    }
+    Ok(true)
+}
+
+/// Conteúdo do .desktop do AVD (e se ele tem a ação da placa dedicada).
+fn render(sdk: &Sdk, avd_name: &str, name: &str, icon_name: &str) -> (String, bool) {
+    let opt = Options { avd: avd_name.to_string(), ..Default::default() };
     let emulator = sdk.emulator().to_string_lossy().into_owned();
     // O GNOME vincula a janela ao atalho comparando o WM_CLASS com
     // StartupWMClass. O emulador (Qt/xcb) usa o mesmo WM_CLASS para todos os AVDs;
@@ -88,17 +125,23 @@ pub(crate) fn create(sdk: &Sdk, opt: &Options, name: &str, icon: &IconSource) ->
         }
     }
     let dgpu = emu::dedicated_gpu_env();
+    // OpenGL e Vulkan na mesma placa também no início normal (ver emu::gpu_env).
+    envs.extend(emu::gpu_env(false).iter().map(|(k, v)| format!("{k}={v}")));
     // Modo gráfico “automático” resolvido (ver emu::prefer_host_gpu).
-    let host_gpu: Vec<&str> =
+    let mut tail: Vec<&str> =
         if emu::prefer_host_gpu() && crate::avd::config(&opt.avd).map(|(c, _)| matches!(c.get("hw.gpu.mode"), "" | "auto")).unwrap_or(true) {
             vec!["-gpu", "host"]
         } else {
             vec![]
         };
+    // Inicialização rápida desligada: nem carrega nem grava o snapshot (ver emu::build_args).
+    if emu::quickboot_off(&opt.avd) {
+        tail.push("-no-snapshot");
+    }
     let argv = |extra: &[&str]| -> Vec<String> {
         let mut v = vec![emulator.clone(), "-avd".to_string(), opt.avd.clone()];
         v.extend(extra.iter().map(|s| s.to_string()));
-        v.extend(host_gpu.iter().map(|s| s.to_string()));
+        v.extend(tail.iter().map(|s| s.to_string()));
         v
     };
     let line = |envs: &[String], extra: &[&str]| -> String {
@@ -108,7 +151,9 @@ pub(crate) fn create(sdk: &Sdk, opt: &Options, name: &str, icon: &IconSource) ->
 
     let mut actions = vec!["cold-boot", "wipe-data"];
     if !dgpu.is_empty() {
-        actions.insert(0, "gpu-dedicada");
+        // o snapshot guarda o estado gráfico da placa em que foi salvo: ao trocar
+        // de placa é preciso o cold boot, então ele existe para as duas
+        actions = vec!["gpu-dedicada", "cold-boot", "cold-boot-dedicada", "wipe-data"];
     }
     let wm = emu::wm_class(&opt.avd);
     let mut b = String::new();
@@ -152,7 +197,7 @@ pub(crate) fn create(sdk: &Sdk, opt: &Options, name: &str, icon: &IconSource) ->
         // O GNOME oferece “Iniciar usando placa de vídeo dedicada” sozinho, mas só
         // enquanto considera o app parado — com o atalho vinculado à janela o item
         // some quando o emulador sobe. Esta ação fica sempre disponível.
-        let mut denvs = envs.clone();
+        let mut denvs: Vec<String> = envs.iter().filter(|e| e.starts_with("RESOURCE_NAME=") || e.starts_with("ANDROID_AVD_HOME=")).cloned().collect();
         denvs.extend(dgpu.iter().map(|(k, v)| format!("{k}={v}")));
         w(String::new());
         w("[Desktop Action gpu-dedicada]".into());
@@ -161,23 +206,15 @@ pub(crate) fn create(sdk: &Sdk, opt: &Options, name: &str, icon: &IconSource) ->
             w(l);
         }
         w(format!("Exec={}", line(&denvs, &[])));
+        w(String::new());
+        w("[Desktop Action cold-boot-dedicada]".into());
+        w("Name=Cold boot with dedicated GPU".into());
+        for l in localized("Name", "Iniciar com cold boot na placa de vídeo dedicada", "Cold boot with dedicated GPU", None) {
+            w(l);
+        }
+        w(format!("Exec={}", line(&denvs, &["-no-snapshot-load"])));
     }
-    std::fs::create_dir_all(apps_dir())?;
-    let path = apps_dir().join(format!("{id}.desktop"));
-    std::fs::write(&path, b)?;
-    validate(&path);
-    refresh_caches();
-    let mut res = CreateResult {
-        path: path.to_string_lossy().into_owned(),
-        display_name: name.to_string(),
-        icon: icon_name,
-        pinned: false,
-        gpu_action: !dgpu.is_empty(),
-    };
-    if opt.pin {
-        res.pinned = gnome::pin(&format!("{id}.desktop"));
-    }
-    Ok(res)
+    (b, !dgpu.is_empty())
 }
 
 /// Roda o desktop-file-validate, se existir (só para avisar no stderr).

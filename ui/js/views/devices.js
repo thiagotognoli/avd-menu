@@ -98,6 +98,7 @@ function menuItems(a, running) {
     { label: t('menu.cold'), icon: 'snow', disabled: !canStart, onClick: () => act.startAvd(a, { mode: 'cold' }) },
     { label: t('menu.wipestart'), icon: 'wipe', disabled: !canStart, onClick: () => act.startAvd(a, { mode: 'wipe' }) },
     info.dgpu ? { label: t('menu.dgpu'), icon: 'gpu', disabled: !canStart, onClick: () => act.startAvd(a, { gpu: 'dedicated' }) } : null,
+    info.dgpu ? { label: t('menu.dgpu.cold'), icon: 'snow', disabled: !canStart, onClick: () => act.startAvd(a, { mode: 'cold', gpu: 'dedicated' }) } : null,
     { label: t('menu.headless'), icon: 'headless', disabled: !canStart, onClick: () => act.startAvd(a, { headless: true }) },
     '-',
     { label: t('menu.edit'), icon: 'edit', disabled: running, onClick: () => openEditor(a) },

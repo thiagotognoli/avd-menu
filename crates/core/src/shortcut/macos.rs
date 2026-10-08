@@ -57,7 +57,9 @@ pub(crate) fn create(sdk: &Sdk, opt: &Options, name: &str, icon: &IconSource) ->
             env.push_str(&format!("export ANDROID_AVD_HOME={}\n", sh_quote(&h)));
         }
     }
-    let script = format!("#!/bin/bash\n{env}exec {} -avd {}\n", sh_quote(&sdk.emulator().to_string_lossy()), sh_quote(&opt.avd));
+    // inicialização rápida desligada: nem carrega nem grava o snapshot (ver emu::build_args)
+    let no_snap = if crate::emu::quickboot_off(&opt.avd) { " -no-snapshot" } else { "" };
+    let script = format!("#!/bin/bash\n{env}exec {} -avd {}{no_snap}\n", sh_quote(&sdk.emulator().to_string_lossy()), sh_quote(&opt.avd));
     let launcher = macos.join("launcher");
     std::fs::write(&launcher, script)?;
     std::fs::set_permissions(&launcher, std::fs::Permissions::from_mode(0o755))?;
