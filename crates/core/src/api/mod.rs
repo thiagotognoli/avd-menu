@@ -117,10 +117,12 @@ impl App {
     }
 
     /// Em segundo plano, atualiza os atalhos já criados (versões novas trazem
-    /// ações e variáveis novas; a máquina pode ter ganhado uma placa de vídeo).
+    /// ações e variáveis novas; a máquina pode ter ganhado uma placa de vídeo) e
+    /// o tema do emulador — que também vale para quem abre pelo atalho.
     pub fn spawn_shortcut_refresh(self: &Arc<Self>) {
         let app = self.clone();
         std::thread::spawn(move || {
+            let _ = emu::theme::sync(&config::load().emulator_theme);
             let sd = app.sdk();
             for a in avd::list(&sd) {
                 let _ = shortcut::refresh(&sd, &a.name);
@@ -261,12 +263,17 @@ impl App {
                 "defaultRoot": sdk::default_root(),
             },
             "candidates": sdk::candidates(&cfg.sdk_root),
-            "config": {"showPreview": cfg.show_preview, "lang": cfg.lang, "theme": cfg.theme},
+            "config": {"showPreview": cfg.show_preview, "lang": cfg.lang, "theme": cfg.theme, "emulatorTheme": cfg.emulator_theme},
             "avdHome": avd::home(),
             "shortcuts": shortcut::supported(),
             "self": shortcut::self_info(),
             "canInstallSelf": platform::is_linux(),
             "dgpu": !emu::dedicated_gpu_env().is_empty(),
+            // nomes das duas placas para o formulário do AVD
+            "gpuCards": match emu::gpu::pick(&gpus) {
+                (Some(i), Some(d)) => json!({"integrated": gpus[i].name, "dedicated": gpus[d].name}),
+                _ => Value::Null,
+            },
             "gpuSmart": emu::prefer_host_gpu(),
             "gpus": gpus,
             "exe": platform::exe(),
@@ -278,6 +285,7 @@ impl App {
         let show = body.get("showPreview").and_then(Value::as_bool);
         let lang = body.get("lang").and_then(Value::as_str).filter(|l| l.is_empty() || crate::lang::normalize(l).is_some()).map(str::to_string);
         let theme = body.get("theme").and_then(Value::as_str).map(str::to_string);
+        let emu_theme = body.get("emulatorTheme").and_then(Value::as_str).filter(|t| matches!(*t, "" | "light" | "dark" | "keep")).map(str::to_string);
         config::update(|c| {
             if let Some(v) = show {
                 c.show_preview = v;
@@ -288,7 +296,13 @@ impl App {
             if let Some(v) = theme {
                 c.theme = v;
             }
+            if let Some(v) = emu_theme.clone() {
+                c.emulator_theme = v;
+            }
         })?;
+        if let Some(t) = emu_theme {
+            let _ = emu::theme::sync(&t);
+        }
         if show.is_some() {
             self.clear_catalog();
         }

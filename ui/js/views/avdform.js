@@ -43,6 +43,8 @@ export function avdForm(v, opts = {}) {
   const gpu = seg([opt('auto', t('form.gpu.auto')), opt('host', t('form.gpu.host')), opt('swiftshader_indirect', t('form.gpu.soft'))],
     ['auto', 'host', 'swiftshader_indirect'].includes(v.gpuMode) ? v.gpuMode : 'auto', (x) => { s.gpuMode = x; });
   const boot = seg([opt('quick', t('form.boot.quick')), opt('cold', t('form.boot.cold'))], v.bootMode, (x) => { s.bootMode = x; });
+  const cards = state.info && state.info.gpuCards;
+  const card = cards ? seg([opt('integrated', t('form.gpucard.integrated')), opt('dedicated', t('form.gpucard.dedicated'))], v.gpuCard || 'integrated', (x) => { s.gpuCard = x; }) : null;
 
   const ram = num(v.ramMB, { min: 256, max: 65536, step: 128 });
   const heap = num(v.vmHeapMB, { min: 16, max: 4096, step: 16 });
@@ -79,6 +81,7 @@ export function avdForm(v, opts = {}) {
       field(t('form.orientation'), orient),
       field(t('form.boot'), boot, t('form.boot.hint'))),
     field(t('form.gpu'), gpu, state.info && state.info.gpuSmart ? t('form.gpu.hint.smart') : t('form.gpu.hint')),
+    card ? field(t('form.gpucard'), card, t('form.gpucard.hint', { i: cards.integrated, d: cards.dedicated })) : null,
     adv);
 
   const posInt = (input) => { const n = parseInt(input.value, 10); return Number.isFinite(n) && n > 0 ? n : undefined; };
@@ -89,7 +92,7 @@ export function avdForm(v, opts = {}) {
     value() {
       const out = {
         displayName: s.displayName?.trim() || undefined,
-        orientation: s.orientation, gpuMode: s.gpuMode, bootMode: s.bootMode,
+        orientation: s.orientation, gpuMode: s.gpuMode, bootMode: s.bootMode, gpuCard: cards ? s.gpuCard : undefined,
         cameraFront: s.cameraFront, cameraBack: s.cameraBack, netSpeed: s.netSpeed, netLatency: s.netLatency,
         ramMB: posInt(ram), vmHeapMB: posInt(heap), cores: posInt(cores), dataMB: posInt(data),
         sdCardMB: Math.max(0, parseInt(sd.value, 10) || 0),

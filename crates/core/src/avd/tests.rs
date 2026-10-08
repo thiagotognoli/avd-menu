@@ -207,3 +207,35 @@ fn device_frame_follows_the_checkbox() {
     let generic = CreateSpec { device_id: "medium_phone".into(), ..spec(None) };
     assert!(fetch_skin_for_create(&sdk, &generic).is_ok(), "aparelho sem skin não baixa nada");
 }
+
+#[test]
+fn graphics_card_choice() {
+    let _g = crate::testutil::env_lock();
+    let (sdk, _) = fake_sdk();
+    create(&sdk, &CreateSpec { name: "Placa".into(), device_id: "pixel_8".into(), image_pkg: IMG.into(), ..Default::default() }).unwrap();
+    let card = || view_of(&config("Placa").unwrap().0, "Placa").gpu_card;
+    assert_eq!(card(), "integrated");
+    assert!(!crate::emu::wants_dedicated("Placa", ""));
+
+    // o snapshot da inicialização rápida é da placa antiga: trocar a placa o descarta
+    let snap = PathBuf::from(&load(&sdk, "Placa").dir).join("snapshots/default_boot");
+    fs::create_dir_all(&snap).unwrap();
+    fs::write(snap.join("ram.bin"), "x").unwrap();
+    update(&sdk, "Placa", &Settings { gpu_card: Some("dedicated".into()), ..Default::default() }).unwrap();
+    assert_eq!(card(), "dedicated");
+    assert_eq!(config("Placa").unwrap().0.get(GPU_KEY), "dedicated");
+    assert_eq!(load(&sdk, "Placa").gpu_card, "dedicated");
+    assert!(!snap.exists());
+    assert!(crate::emu::wants_dedicated("Placa", ""));
+    assert!(!crate::emu::wants_dedicated("Placa", "integrated"), "o menu pode pedir a outra placa");
+
+    // outras edições não mexem no snapshot
+    fs::create_dir_all(&snap).unwrap();
+    update(&sdk, "Placa", &Settings { cores: Some(2), ..Default::default() }).unwrap();
+    assert!(snap.exists());
+    update(&sdk, "Placa", &Settings { gpu_card: Some("integrated".into()), ..Default::default() }).unwrap();
+    assert_eq!(config("Placa").unwrap().0.get(GPU_KEY), "", "a chave some no padrão");
+    assert!(!snap.exists());
+    assert!(update(&sdk, "Placa", &Settings { gpu_card: Some("nvidia".into()), ..Default::default() }).is_err());
+    delete("Placa").unwrap();
+}

@@ -124,9 +124,14 @@ fn render(sdk: &Sdk, avd_name: &str, name: &str, icon_name: &str) -> (String, bo
             envs.push(format!("ANDROID_AVD_HOME={h}"));
         }
     }
+    // Com duas placas: o início normal usa a placa padrão do AVD e as ações extras,
+    // a outra. OpenGL e Vulkan vão sempre juntos (ver emu::gpu_env).
     let dgpu = emu::dedicated_gpu_env();
-    // OpenGL e Vulkan na mesma placa também no início normal (ver emu::gpu_env).
-    envs.extend(emu::gpu_env(false).iter().map(|(k, v)| format!("{k}={v}")));
+    let two_cards = !dgpu.is_empty();
+    let dedicated_default = two_cards && emu::wants_dedicated(&opt.avd, "");
+    let (main_gpu, other_gpu) = if dedicated_default { (dgpu, emu::gpu_env(false)) } else { (emu::gpu_env(false), dgpu) };
+    let base = envs.clone();
+    envs.extend(main_gpu.iter().map(|(k, v)| format!("{k}={v}")));
     // Modo gráfico “automático” resolvido (ver emu::prefer_host_gpu).
     let mut tail: Vec<&str> =
         if emu::prefer_host_gpu() && crate::avd::config(&opt.avd).map(|(c, _)| matches!(c.get("hw.gpu.mode"), "" | "auto")).unwrap_or(true) {
@@ -149,11 +154,23 @@ fn render(sdk: &Sdk, avd_name: &str, name: &str, icon_name: &str) -> (String, bo
         exec_line(envs, &a.iter().map(String::as_str).collect::<Vec<_>>())
     };
 
+    // (ação, nome em inglês, nome em português) para iniciar na outra placa
+    let (other, other_cold) = if dedicated_default {
+        (
+            ("gpu-integrada", "Start with integrated GPU", "Iniciar com placa de vídeo integrada"),
+            ("cold-boot-integrada", "Cold boot with integrated GPU", "Iniciar com cold boot na placa de vídeo integrada"),
+        )
+    } else {
+        (
+            ("gpu-dedicada", "Start with dedicated GPU", "Iniciar com placa de vídeo dedicada"),
+            ("cold-boot-dedicada", "Cold boot with dedicated GPU", "Iniciar com cold boot na placa de vídeo dedicada"),
+        )
+    };
     let mut actions = vec!["cold-boot", "wipe-data"];
-    if !dgpu.is_empty() {
+    if two_cards {
         // o snapshot guarda o estado gráfico da placa em que foi salvo: ao trocar
         // de placa é preciso o cold boot, então ele existe para as duas
-        actions = vec!["gpu-dedicada", "cold-boot", "cold-boot-dedicada", "wipe-data"];
+        actions = vec![other.0, "cold-boot", other_cold.0, "wipe-data"];
     }
     let wm = emu::wm_class(&opt.avd);
     let mut b = String::new();
@@ -193,28 +210,23 @@ fn render(sdk: &Sdk, avd_name: &str, name: &str, icon_name: &str) -> (String, bo
         w(l);
     }
     w(format!("Exec={}", line(&envs, &["-wipe-data"])));
-    if !dgpu.is_empty() {
+    if two_cards {
         // O GNOME oferece “Iniciar usando placa de vídeo dedicada” sozinho, mas só
         // enquanto considera o app parado — com o atalho vinculado à janela o item
-        // some quando o emulador sobe. Esta ação fica sempre disponível.
-        let mut denvs: Vec<String> = envs.iter().filter(|e| e.starts_with("RESOURCE_NAME=") || e.starts_with("ANDROID_AVD_HOME=")).cloned().collect();
-        denvs.extend(dgpu.iter().map(|(k, v)| format!("{k}={v}")));
-        w(String::new());
-        w("[Desktop Action gpu-dedicada]".into());
-        w("Name=Start with dedicated GPU".into());
-        for l in localized("Name", "Iniciar com placa de vídeo dedicada", "Start with dedicated GPU", None) {
-            w(l);
+        // some quando o emulador sobe. Estas ações ficam sempre disponíveis.
+        let mut oenvs = base;
+        oenvs.extend(other_gpu.iter().map(|(k, v)| format!("{k}={v}")));
+        for ((id, en, pt), extra) in [(other, &[][..]), (other_cold, &["-no-snapshot-load"][..])] {
+            w(String::new());
+            w(format!("[Desktop Action {id}]"));
+            w(format!("Name={en}"));
+            for l in localized("Name", pt, en, None) {
+                w(l);
+            }
+            w(format!("Exec={}", line(&oenvs, extra)));
         }
-        w(format!("Exec={}", line(&denvs, &[])));
-        w(String::new());
-        w("[Desktop Action cold-boot-dedicada]".into());
-        w("Name=Cold boot with dedicated GPU".into());
-        for l in localized("Name", "Iniciar com cold boot na placa de vídeo dedicada", "Cold boot with dedicated GPU", None) {
-            w(l);
-        }
-        w(format!("Exec={}", line(&denvs, &["-no-snapshot-load"])));
     }
-    (b, !dgpu.is_empty())
+    (b, two_cards)
 }
 
 /// Roda o desktop-file-validate, se existir (só para avisar no stderr).

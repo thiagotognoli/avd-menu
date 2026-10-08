@@ -97,8 +97,12 @@ function menuItems(a, running) {
   return [
     { label: t('menu.cold'), icon: 'snow', disabled: !canStart, onClick: () => act.startAvd(a, { mode: 'cold' }) },
     { label: t('menu.wipestart'), icon: 'wipe', disabled: !canStart, onClick: () => act.startAvd(a, { mode: 'wipe' }) },
-    info.dgpu ? { label: t('menu.dgpu'), icon: 'gpu', disabled: !canStart, onClick: () => act.startAvd(a, { gpu: 'dedicated' }) } : null,
-    info.dgpu ? { label: t('menu.dgpu.cold'), icon: 'snow', disabled: !canStart, onClick: () => act.startAvd(a, { mode: 'cold', gpu: 'dedicated' }) } : null,
+    // com duas placas: iniciar na que não é a padrão do AVD (com e sem cold boot)
+    ...(info.dgpu ? (a.gpuCard === 'dedicated'
+      ? [{ label: t('menu.igpu'), icon: 'gpu', disabled: !canStart, onClick: () => act.startAvd(a, { gpu: 'integrated' }) },
+        { label: t('menu.igpu.cold'), icon: 'snow', disabled: !canStart, onClick: () => act.startAvd(a, { mode: 'cold', gpu: 'integrated' }) }]
+      : [{ label: t('menu.dgpu'), icon: 'gpu', disabled: !canStart, onClick: () => act.startAvd(a, { gpu: 'dedicated' }) },
+        { label: t('menu.dgpu.cold'), icon: 'snow', disabled: !canStart, onClick: () => act.startAvd(a, { mode: 'cold', gpu: 'dedicated' }) }]) : []),
     { label: t('menu.headless'), icon: 'headless', disabled: !canStart, onClick: () => act.startAvd(a, { headless: true }) },
     '-',
     { label: t('menu.edit'), icon: 'edit', disabled: running, onClick: () => openEditor(a) },

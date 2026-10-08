@@ -28,6 +28,10 @@ pub struct Config {
     /// "light", "dark" ou "".
     #[serde(skip_serializing_if = "String::is_empty")]
     pub theme: String,
+    /// Tema das janelas do emulador: "" (segue o sistema), "light", "dark" ou
+    /// "keep" (não mexe no que foi escolhido nas configurações do emulador).
+    #[serde(skip_serializing_if = "String::is_empty")]
+    pub emulator_theme: String,
     /// Argumentos extras do emulador, por AVD.
     #[serde(skip_serializing_if = "BTreeMap::is_empty")]
     pub avd_extra_args: BTreeMap<String, String>,

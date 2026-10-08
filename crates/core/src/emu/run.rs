@@ -112,7 +112,7 @@ pub fn parse_ps(out: &str, self_pid: i32) -> BTreeMap<String, Instance> {
 pub struct StartOptions {
     /// "" / "normal" | "cold" | "wipe"
     pub mode: String,
-    /// "" (padrão) | "dedicated"
+    /// "" (a placa padrão do AVD) | "dedicated" | "integrated"
     pub gpu: String,
     /// sem janela
     pub headless: bool,
@@ -135,6 +135,16 @@ pub fn read_log_tail(name: &str, n: usize) -> String {
     let lines: Vec<&str> = s.trim_end_matches('\n').split('\n').collect();
     let from = lines.len().saturating_sub(n);
     lines[from..].join("\n")
+}
+
+/// Esta execução usa a placa dedicada? `requested` vem de `StartOptions::gpu`;
+/// vazio = a placa padrão escolhida no AVD.
+pub fn wants_dedicated(name: &str, requested: &str) -> bool {
+    match requested {
+        "dedicated" => true,
+        "integrated" | "default" => false,
+        _ => avd::config(name).map(|(c, _)| avd::gpu_card(&c) == "dedicated").unwrap_or(false),
+    }
 }
 
 /// O AVD está em “cold boot” (inicialização rápida desligada)?
@@ -209,6 +219,10 @@ pub fn start_watched(sdk: &Sdk, name: &str, opt: &StartOptions, on_early_exit: O
     let mut logf = std::fs::File::create(&log)?;
     use std::io::Write;
     let _ = writeln!(logf, "$ {} {}", bin.display(), args.join(" "));
+    // Tema das janelas do emulador (segue o sistema, a menos que o usuário escolha).
+    if let Err(e) = super::theme::sync(&crate::config::load().emulator_theme) {
+        let _ = writeln!(logf, "avd-menu: {e}");
+    }
     // Moldura do aparelho: baixa a skin que falta e acerta skin.path no config.ini.
     if let Err(e) = avd::skin::prepare(sdk, name) {
         let _ = writeln!(logf, "avd-menu: {e}");
@@ -223,7 +237,7 @@ pub fn start_watched(sdk: &Sdk, name: &str, opt: &StartOptions, on_early_exit: O
         .stderr(logf);
     platform::clean_env(&mut cmd);
     // OpenGL e Vulkan na mesma placa (a dedicada, se pedida; senão a dos monitores)
-    for (k, v) in super::gpu::gpu_env(opt.gpu == "dedicated") {
+    for (k, v) in super::gpu::gpu_env(wants_dedicated(name, &opt.gpu)) {
         cmd.env(k, v);
     }
     // Nova sessão: o emulador sobrevive ao fechamento do AVD Menu / do terminal.

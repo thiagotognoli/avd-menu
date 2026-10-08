@@ -118,7 +118,8 @@ pub fn appimage_env_fixes(vars: &[(String, String)], real_home: Option<&str>) ->
             continue;
         }
         if !appimage.is_empty() && k == "XDG_CONFIG_HOME" && v.trim_end_matches('/') == format!("{appimage}.config") {
-            out.push((k.clone(), None));
+            // o runtime guarda o valor original em HOST_XDG_CONFIG_HOME
+            out.push((k.clone(), get("HOST_XDG_CONFIG_HOME").map(str::to_string)));
         } else if !appimage.is_empty() && k == "HOME" && v.trim_end_matches('/') == format!("{appimage}.home") {
             if let Some(h) = real_home {
                 out.push((k.clone(), Some(h.to_string())));
@@ -131,6 +132,23 @@ pub fn appimage_env_fixes(vars: &[(String, String)], real_home: Option<&str>) ->
         }
     }
     out
+}
+
+/// XDG_CONFIG_HOME que um processo filho (o emulador) vai usar — dentro do
+/// AppImage com configuração portátil, o nosso é outro (ver `appimage_env_fixes`).
+pub fn child_config_home() -> PathBuf {
+    let vars: Vec<(String, String)> = std::env::vars_os().map(|(k, v)| (k.to_string_lossy().into_owned(), v.to_string_lossy().into_owned())).collect();
+    let fixes = appimage_env_fixes(&vars, passwd_home().as_deref());
+    let fixed = |name: &str| fixes.iter().find(|(k, _)| k == name).map(|(_, v)| v.clone());
+    let home = match fixed("HOME") {
+        Some(Some(h)) => PathBuf::from(h),
+        _ => home(),
+    };
+    match fixed("XDG_CONFIG_HOME") {
+        Some(Some(v)) => PathBuf::from(v),
+        Some(None) => home.join(".config"),
+        None => env_dir("XDG_CONFIG_HOME").unwrap_or_else(|| home.join(".config")),
+    }
 }
 
 /// Pasta pessoal segundo o /etc/passwd (o HOME pode ter sido trocado).
@@ -208,18 +226,23 @@ mod tests {
             v("GTK_EXE_PREFIX", &format!("{m}//usr")),
             v("QT_PLUGIN_PATH", &format!("{m}/usr/lib/qt5/plugins/:{m}/usr/lib64/qt5/plugins/:")),
             v("XDG_CONFIG_HOME", "/home/u/Apps/AVD Menu.config"),
+            v("HOST_XDG_CONFIG_HOME", "/home/u/.config"),
             v("HOME", "/home/u/Apps/AVD Menu.home"),
             v("DBUS_SESSION_BUS_ADDRESS", "unix:path=/run/user/1000/bus"),
             v("LANG", "pt_BR.UTF-8"),
         ];
         let fixes: std::collections::BTreeMap<String, Option<String>> = appimage_env_fixes(&vars, Some("/home/u")).into_iter().collect();
         let f = |k: &str| fixes.get(k).cloned();
-        for gone in ["APPDIR", "APPIMAGE", "OWD", "APPIMAGE_GTK_THEME", "GTK_THEME", "PYTHONHOME", "GTK_EXE_PREFIX", "QT_PLUGIN_PATH", "XDG_CONFIG_HOME"] {
+        for gone in ["APPDIR", "APPIMAGE", "OWD", "APPIMAGE_GTK_THEME", "GTK_THEME", "PYTHONHOME", "GTK_EXE_PREFIX", "QT_PLUGIN_PATH"] {
             assert_eq!(f(gone), Some(None), "{gone}");
         }
         assert_eq!(f("PATH"), Some(Some("/home/u/bin:/usr/bin".into())));
         assert_eq!(f("XDG_DATA_DIRS"), Some(Some("/usr/share:/usr/local/share/".into())));
         assert_eq!(f("HOME"), Some(Some("/home/u".into())));
+        assert_eq!(f("XDG_CONFIG_HOME"), Some(Some("/home/u/.config".into())), "volta ao valor de fora do AppImage");
+        // sem HOST_XDG_CONFIG_HOME, simplesmente some (o padrão é ~/.config)
+        let sem: Vec<_> = vars.iter().filter(|(k, _)| k != "HOST_XDG_CONFIG_HOME").cloned().collect();
+        assert!(appimage_env_fixes(&sem, None).contains(&("XDG_CONFIG_HOME".to_string(), None)));
         assert_eq!(f("DBUS_SESSION_BUS_ADDRESS"), None);
         assert_eq!(f("LANG"), None);
     }

@@ -125,5 +125,8 @@
  "Wipe data and start": "清除数据并启动",
  "Start with dedicated GPU": "使用独立 GPU 启动",
  "Starts the Android emulator {}": "启动 Android 模拟器 {}",
- "Cold boot with dedicated GPU": "使用独立 GPU 冷启动"
+ "Cold boot with dedicated GPU": "使用独立 GPU 冷启动",
+ "Start with integrated GPU": "使用集成 GPU 启动",
+ "Cold boot with integrated GPU": "使用集成 GPU 冷启动",
+ "invalid graphics card: {:?}": "无效的显卡：{:?}"
 }

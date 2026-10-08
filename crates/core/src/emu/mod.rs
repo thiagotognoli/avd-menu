@@ -4,10 +4,13 @@
 pub mod diag;
 pub mod gpu;
 pub mod run;
+pub mod theme;
 
 pub use diag::{diagnose, Check};
 pub use gpu::{dedicated_gpu_env, gpu_env, list_gpus, prefer_host_gpu, Gpu};
-pub use run::{log_path, parse_ps, quickboot_off, read_log_tail, running, start, start_watched, stop, wm_class, EarlyExit, Instance, StartOptions};
+pub use run::{
+    log_path, parse_ps, quickboot_off, read_log_tail, running, start, start_watched, stop, wants_dedicated, wm_class, EarlyExit, Instance, StartOptions,
+};
 
 use std::process::{Child, Command, Output, Stdio};
 use std::time::{Duration, Instant};

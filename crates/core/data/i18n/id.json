@@ -125,5 +125,8 @@
  "Wipe data and start": "Hapus data lalu mulai",
  "Start with dedicated GPU": "Mulai dengan GPU khusus",
  "Starts the Android emulator {}": "Memulai emulator Android {}",
- "Cold boot with dedicated GPU": "Cold boot dengan GPU khusus"
+ "Cold boot with dedicated GPU": "Cold boot dengan GPU khusus",
+ "Start with integrated GPU": "Mulai dengan GPU terintegrasi",
+ "Cold boot with integrated GPU": "Cold boot dengan GPU terintegrasi",
+ "invalid graphics card: {:?}": "kartu grafis tidak valid: {:?}"
 }

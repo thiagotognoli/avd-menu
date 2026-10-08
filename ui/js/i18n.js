@@ -50,7 +50,7 @@ const S = {
   'avd.download.image': ['Baixar imagem', 'Download image'],
   'shortcut.exists': ['Tem atalho no menu', 'Has a menu shortcut'],
   'menu.cold': ['Iniciar com cold boot', 'Cold boot'], 'menu.wipestart': ['Apagar dados e iniciar', 'Wipe data and start'],
-  'menu.dgpu': ['Iniciar com GPU dedicada', 'Start with dedicated GPU'], 'menu.dgpu.cold': ['Cold boot com GPU dedicada', 'Cold boot with dedicated GPU'], 'menu.headless': ['Iniciar sem janela', 'Start without a window'],
+  'menu.dgpu': ['Iniciar com GPU dedicada', 'Start with dedicated GPU'], 'menu.dgpu.cold': ['Cold boot com GPU dedicada', 'Cold boot with dedicated GPU'], 'menu.igpu': ['Iniciar com GPU integrada', 'Start with integrated GPU'], 'menu.igpu.cold': ['Cold boot com GPU integrada', 'Cold boot with integrated GPU'], 'menu.headless': ['Iniciar sem janela', 'Start without a window'],
   'menu.edit': ['Editar…', 'Edit…'], 'menu.duplicate': ['Duplicar…', 'Duplicate…'], 'menu.show': ['Mostrar no disco', 'Show on disk'],
   'menu.log': ['Ver log', 'View log'], 'menu.wipe': ['Apagar dados…', 'Wipe data…'], 'menu.delete': ['Excluir…', 'Delete…'],
   'menu.shortcut.create': ['Criar atalho no menu…', 'Create menu shortcut…'], 'menu.shortcut.edit': ['Editar atalho do menu…', 'Edit menu shortcut…'],
@@ -111,6 +111,8 @@ const S = {
   'form.name': ['Nome do dispositivo', 'Device name'], 'form.orientation': ['Orientação inicial', 'Initial orientation'], 'form.portrait': ['Retrato', 'Portrait'], 'form.landscape': ['Paisagem', 'Landscape'],
   'form.boot': ['Inicialização', 'Startup'], 'form.boot.quick': ['Quick boot', 'Quick boot'], 'form.boot.cold': ['Cold boot', 'Cold boot'], 'form.boot.hint': ['Quick boot retoma o estado salvo; cold boot liga do zero e não salva o estado ao fechar.', 'Quick boot resumes the saved state; cold boot starts from scratch and does not save the state on exit.'],
   'form.gpu': ['Gráficos', 'Graphics'], 'form.gpu.auto': ['Automático', 'Automatic'], 'form.gpu.host': ['Hardware', 'Hardware'], 'form.gpu.soft': ['Software', 'Software'],
+  'form.gpucard': ['Placa de vídeo', 'Graphics card'], 'form.gpucard.integrated': ['Integrada', 'Integrated'], 'form.gpucard.dedicated': ['Dedicada', 'Dedicated'],
+  'form.gpucard.hint': ['Integrada: {i} · Dedicada: {d}. Ao trocar, o próximo início é do zero (o estado salvo é da outra placa).', 'Integrated: {i} · Dedicated: {d}. After switching, the next start is a cold boot (the saved state belongs to the other card).'],
   'form.gpu.hint': ['Automático escolhe a melhor opção; Software funciona em qualquer máquina, porém mais lento.', 'Automatic picks the best option; Software works anywhere but is slower.'],
   'form.gpu.hint.smart': ['Automático: neste computador o AVD Menu usa a placa de vídeo (-gpu host), porque o modo automático do emulador cairia para software (lento). Escolha Software se a tela ficar preta.', 'Automatic: on this computer AVD Menu uses the video card (-gpu host), because the emulator’s own automatic mode would fall back to slow software rendering. Pick Software if the screen goes black.'],
   'form.advanced': ['Configurações avançadas', 'Advanced settings'],
@@ -159,6 +161,8 @@ const S = {
 
   // configurações
   'settings.title': ['Configurações', 'Settings'], 'settings.sdk': ['Android SDK', 'Android SDK'], 'settings.avdhome': ['Pasta dos AVDs', 'AVD folder'], 'settings.lang': ['Idioma', 'Language'], 'settings.theme': ['Tema', 'Theme'],
+  'settings.emutheme': ['Tema do emulador', 'Emulator theme'], 'settings.emutheme.system': ['Seguir o sistema', 'Follow the system'], 'settings.emutheme.keep': ['Não alterar', 'Leave unchanged'],
+  'settings.emutheme.hint': ['Barra de ferramentas e controles estendidos do emulador. Vale para os emuladores abertos depois.', 'The emulator’s toolbar and extended controls. Applies to emulators started afterwards.'],
   'settings.auto': ['Automático', 'Automatic'], 'settings.light': ['Claro', 'Light'], 'settings.dark': ['Escuro', 'Dark'],
   'settings.self': ['AVD Menu no menu de aplicativos', 'AVD Menu in the application menu'], 'settings.self.on': ['O AVD Menu já aparece no menu de aplicativos.', 'AVD Menu already shows up in the application menu.'], 'settings.self.off': ['Adicione para abrir o AVD Menu como qualquer outro aplicativo.', 'Add it to open AVD Menu like any other application.'],
   'settings.self.add': ['Adicionar ao menu', 'Add to menu'], 'settings.self.remove': ['Remover do menu', 'Remove from menu'], 'settings.self.added': ['AVD Menu adicionado ao menu de aplicativos.', 'AVD Menu added to the application menu.'], 'settings.self.removed': ['AVD Menu removido do menu.', 'AVD Menu removed from the menu.'],

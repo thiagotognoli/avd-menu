@@ -125,5 +125,8 @@
  "Wipe data and start": "Borrar datos e iniciar",
  "Start with dedicated GPU": "Iniciar con GPU dedicada",
  "Starts the Android emulator {}": "Inicia el emulador Android {}",
- "Cold boot with dedicated GPU": "Arranque en frío con GPU dedicada"
+ "Cold boot with dedicated GPU": "Arranque en frío con GPU dedicada",
+ "Start with integrated GPU": "Iniciar con GPU integrada",
+ "Cold boot with integrated GPU": "Arranque en frío con GPU integrada",
+ "invalid graphics card: {:?}": "tarjeta gráfica no válida: {:?}"
 }

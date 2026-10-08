@@ -56,6 +56,8 @@ export function settingsDialog() {
     [['', t('settings.auto')], ...LANGUAGES.map((l) => [l.code, l.name])].map(([v, l]) => h('option', { value: v, selected: v === (info.config.lang || '') || null }, l)));
   const themeSel = h('select', { onchange: async (e) => { await post('/api/settings', { theme: e.target.value }); applyTheme(e.target.value); info.config.theme = e.target.value; } },
     [['', t('settings.auto')], ['light', t('settings.light')], ['dark', t('settings.dark')]].map(([v, l]) => h('option', { value: v, selected: v === (info.config.theme || '') || null }, l)));
+  const emuThemeSel = h('select', { onchange: async (e) => { await post('/api/settings', { emulatorTheme: e.target.value }); info.config.emulatorTheme = e.target.value; } },
+    [['', t('settings.emutheme.system')], ['light', t('settings.light')], ['dark', t('settings.dark')], ['keep', t('settings.emutheme.keep')]].map(([v, l]) => h('option', { value: v, selected: v === (info.config.emulatorTheme || '') || null }, l)));
   const self = info.self && info.self.exists;
   const selfBtn = h('button', { class: 'btn outline sm', onclick: async () => {
     try {
@@ -69,6 +71,7 @@ export function settingsDialog() {
       h('div', { class: 'field' }, h('label', null, t('settings.sdk')), h('div', { class: 'row' }, h('code', { class: 'grow' }, info.sdk.root), h('button', { class: 'btn outline sm', onclick: () => { m.close(); sdkLocationDialog(); } }, t('sdk.change')))),
       h('div', { class: 'field' }, h('label', null, t('settings.avdhome')), h('code', null, info.avdHome)),
       h('div', { class: 'cols' }, h('div', { class: 'field' }, h('label', null, t('settings.lang')), langSel), h('div', { class: 'field' }, h('label', null, t('settings.theme')), themeSel)),
+      info.os === 'linux' ? h('div', { class: 'field' }, h('label', null, t('settings.emutheme')), emuThemeSel, h('div', { class: 'hint' }, t('settings.emutheme.hint'))) : null,
       info.canInstallSelf ? h('div', { class: 'field' }, h('label', null, t('settings.self')), h('div', { class: 'row' }, h('div', { class: 'grow muted small' }, self ? t('settings.self.on') : t('settings.self.off')), selfBtn),
         info.appImage ? h('div', { class: 'hint' }, t('settings.self.appimage')) : null) : null,
       h('div', { class: 'small muted' }, `AVD Menu ${info.version} · ${info.os}/${info.arch}`),

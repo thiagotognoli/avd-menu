@@ -125,5 +125,8 @@
  "Wipe data and start": "مسح البيانات والتشغيل",
  "Start with dedicated GPU": "تشغيل باستخدام GPU مخصصة",
  "Starts the Android emulator {}": "يشغّل محاكي Android {}",
- "Cold boot with dedicated GPU": "تشغيل بارد باستخدام GPU مخصصة"
+ "Cold boot with dedicated GPU": "تشغيل بارد باستخدام GPU مخصصة",
+ "Start with integrated GPU": "تشغيل باستخدام GPU مدمجة",
+ "Cold boot with integrated GPU": "تشغيل بارد باستخدام GPU مدمجة",
+ "invalid graphics card: {:?}": "بطاقة رسومات غير صالحة: {:?}"
 }

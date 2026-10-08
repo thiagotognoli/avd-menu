@@ -5,7 +5,9 @@ pub mod create;
 pub mod ini;
 pub mod skin;
 
-pub use create::{build_config, create, fetch_skin_for_create, fetch_skin_for_update, update, view_of, write_raw_config, CreateSpec, Settings, View};
+pub use create::{
+    build_config, create, fetch_skin_for_create, fetch_skin_for_update, gpu_card, update, view_of, write_raw_config, CreateSpec, Settings, View, GPU_KEY,
+};
 pub use ini::Ini;
 
 use crate::sdk::{self, Sdk};
@@ -64,6 +66,8 @@ pub struct Avd {
     /// epoch segundos
     pub last_used: i64,
     pub problem: String,
+    /// Placa de vídeo padrão: "dedicated" ou "integrated" (ver `create::GPU_KEY`).
+    pub gpu_card: String,
 }
 
 /// Aceita só `[A-Za-z0-9._-]+` sem ponto inicial.
@@ -214,6 +218,7 @@ pub fn load(sdk: &Sdk, name: &str) -> Avd {
     a.height = cfg.get("hw.lcd.height").parse().unwrap_or(0);
     a.density = cfg.get("hw.lcd.density").parse().unwrap_or(0);
     a.ram_mb = parse_mb(cfg.get("hw.ramSize"));
+    a.gpu_card = create::gpu_card(&cfg).to_string();
     if !sysdir.is_empty() {
         a.image_ok = platform::dir_exists(&sdk.root.join(sysdir));
         if !a.image_ok {

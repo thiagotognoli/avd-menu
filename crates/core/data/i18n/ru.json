@@ -125,5 +125,8 @@
  "Wipe data and start": "Стереть данные и запустить",
  "Start with dedicated GPU": "Запустить с дискретным GPU",
  "Starts the Android emulator {}": "Запускает эмулятор Android {}",
- "Cold boot with dedicated GPU": "Холодная загрузка с дискретным GPU"
+ "Cold boot with dedicated GPU": "Холодная загрузка с дискретным GPU",
+ "Start with integrated GPU": "Запустить со встроенным GPU",
+ "Cold boot with integrated GPU": "Холодная загрузка со встроенным GPU",
+ "invalid graphics card: {:?}": "недопустимая видеокарта: {:?}"
 }

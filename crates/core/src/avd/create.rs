@@ -40,8 +40,23 @@ pub struct Settings {
     pub boot_mode: Option<String>,
     pub keyboard: Option<bool>,
     pub show_frame: Option<bool>,
+    /// Placa de vídeo em que o emulador roda: integrated | dedicated
+    pub gpu_card: Option<String>,
     /// Sobrescreve chaves arbitrárias do config.ini (null apaga).
     pub extra: BTreeMap<String, Option<String>>,
+}
+
+/// Chave do config.ini (nossa; o emulador ignora chaves que não conhece, como
+/// o showDeviceFrame) com a placa de vídeo padrão do AVD em máquinas com duas.
+pub const GPU_KEY: &str = "avdmenu.gpu";
+
+/// Placa de vídeo padrão do AVD: "dedicated" ou "integrated".
+pub fn gpu_card(cfg: &Ini) -> &'static str {
+    if cfg.get(GPU_KEY) == "dedicated" {
+        "dedicated"
+    } else {
+        "integrated"
+    }
 }
 
 fn yesno(b: bool) -> &'static str {
@@ -131,6 +146,13 @@ impl Settings {
         if let Some(v) = self.show_frame {
             cfg.set("showDeviceFrame", yesno(v));
         }
+        if let Some(v) = &self.gpu_card {
+            match v.as_str() {
+                "dedicated" => cfg.set(GPU_KEY, "dedicated"),
+                "integrated" | "" => cfg.delete(GPU_KEY),
+                _ => return Err(bad!("placa de vídeo inválida: {:?}", "invalid graphics card: {:?}", v)),
+            }
+        }
         for (k, v) in &self.extra {
             if k.is_empty() || k.contains(['=', '\n', '\r', ' ']) {
                 return Err(bad!("chave inválida: {:?}", "invalid key: {:?}", k));
@@ -172,6 +194,7 @@ pub struct View {
     pub boot_mode: String,
     pub keyboard: bool,
     pub show_frame: bool,
+    pub gpu_card: String,
 }
 
 fn or_default(v: &str, def: &str) -> String {
@@ -196,6 +219,7 @@ pub fn view_of(cfg: &Ini, name: &str) -> View {
         boot_mode: if cfg.get("fastboot.forceColdBoot") == "yes" { "cold" } else { "quick" }.to_string(),
         keyboard: cfg.get("hw.keyboard") == "yes",
         show_frame: cfg.get("showDeviceFrame") == "yes",
+        gpu_card: gpu_card(cfg).to_string(),
     }
 }
 
@@ -205,9 +229,15 @@ pub fn update(sdk: &Sdk, name: &str, st: &Settings) -> Result<()> {
     let dir = avd_dir(name)?;
     let p = dir.join("config.ini");
     let mut cfg = Ini::read(&p)?;
+    let card_before = gpu_card(&cfg);
     st.apply(&mut cfg)?;
     skin::sync(&mut cfg, sdk);
     std::fs::write(&p, cfg.to_text())?;
+    // O snapshot da inicialização rápida guarda o estado gráfico da placa em
+    // que foi salvo; carregado na outra placa, o emulador abre e falha.
+    if gpu_card(&cfg) != card_before {
+        let _ = std::fs::remove_dir_all(dir.join("snapshots/default_boot"));
+    }
     Ok(())
 }
 

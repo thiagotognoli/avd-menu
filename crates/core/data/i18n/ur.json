@@ -125,5 +125,8 @@
  "Wipe data and start": "ڈیٹا صاف کر کے شروع کریں",
  "Start with dedicated GPU": "ڈیڈیکیٹڈ GPU کے ساتھ شروع کریں",
  "Starts the Android emulator {}": "Android ایمولیٹر {} شروع کرتا ہے",
- "Cold boot with dedicated GPU": "ڈیڈیکیٹڈ GPU کے ساتھ کولڈ بوٹ"
+ "Cold boot with dedicated GPU": "ڈیڈیکیٹڈ GPU کے ساتھ کولڈ بوٹ",
+ "Start with integrated GPU": "انٹیگریٹڈ GPU کے ساتھ شروع کریں",
+ "Cold boot with integrated GPU": "انٹیگریٹڈ GPU کے ساتھ کولڈ بوٹ",
+ "invalid graphics card: {:?}": "غلط گرافکس کارڈ: {:?}"
 }

@@ -44,7 +44,15 @@ fn catalogs_have_the_same_entries_and_placeholders() {
 fn desktop_entries_are_localized() {
     // as frases do atalho (.desktop) têm tradução em todos os idiomas
     for code in LANGS.iter().filter(|c| !matches!(**c, "pt" | "en")) {
-        for en in ["Cold boot", "Wipe data and start", "Start with dedicated GPU", "Cold boot with dedicated GPU", "Starts the Android emulator {}"] {
+        for en in [
+            "Cold boot",
+            "Wipe data and start",
+            "Start with dedicated GPU",
+            "Cold boot with dedicated GPU",
+            "Start with integrated GPU",
+            "Cold boot with integrated GPU",
+            "Starts the Android emulator {}",
+        ] {
             assert!(avdcore::lang::translated(code, en).is_some(), "{code}: {en}");
         }
     }
