@@ -39,7 +39,7 @@ Para aparecer no menu de aplicativos do Linux: *Configurações (engrenagem) →
 
 | | |
 |---|---|
-| **Device Manager** | lista com estado em tempo real, iniciar/parar, cold boot, wipe data, duplicar, editar (RAM, heap, CPUs, armazenamento, cartão SD, câmeras, rede, gráficos, placa de vídeo integrada/dedicada, teclado, moldura), editor de `config.ini`, argumentos extras do emulador por AVD, log da execução |
+| **Device Manager** | lista com estado em tempo real, iniciar/parar, cold boot, wipe data, duplicar, editar (RAM, heap, CPUs, armazenamento, cartão SD, câmeras, rede, gráficos, placa de vídeo integrada/dedicada, teclado, moldura, desfoque de janelas), editor de `config.ini`, argumentos extras do emulador por AVD, log da execução |
 | **Criar dispositivo** | ~95 perfis de hardware oficiais (as mesmas definições do Android Studio) + perfis próprios; imagens *Recomendadas / Todas compatíveis / Outras* filtradas pelo tipo de aparelho e pela arquitetura do computador |
 | **SDK Manager** | plataformas, imagens de sistema, emulador, platform-tools, build-tools, cmdline-tools, NDK, CMake… instalar/atualizar/remover com download retomável, checagem SHA-1 e licenças |
 | **Atalhos** | Linux: `.desktop` com `StartupWMClass` (a janela do emulador se vincula ao ícone na dock), ações *cold boot / apagar dados / GPU dedicada / cold boot na GPU dedicada*, ícone próprio, fixar na dock do GNOME; o AVD Menu atualiza os atalhos já criados ao abrir e ao editar o AVD. macOS: `.app` em `~/Applications` |
@@ -141,6 +141,7 @@ git tag v1.0.0 && git push origin v1.0.0
 | Atalho criado por outra versão continua lento | abra o AVD Menu uma vez: ele regrava os atalhos existentes (mesmo nome e ícone) com as opções atuais |
 | Notebook com 2 GPUs lento | menu `⋮` → *Iniciar com GPU dedicada* (o atalho do menu tem a mesma ação) |
 | 2 GPUs: travadas, “não está respondendo” | o emulador punha o OpenGL na placa dos monitores e o Vulkan na dedicada; o AVD Menu agora prende os dois na mesma placa (`DRI_PRIME` + `MESA_VK_DEVICE_SELECT`), a escolhida em editar o AVD → *Placa de vídeo*. Ao trocar de placa use *cold boot*: o snapshot guarda o estado gráfico da placa em que foi salvo |
+| A janela do emulador para num quadro antigo (o toque “não funciona”, ◁ ○ □ destravam; log: `Failed to find ColorBuffer`) | editar o AVD → avançadas → *Desligar o desfoque de janelas*: o AVD Menu aplica `disable_window_blurs` no Android quando ele termina de iniciar (também em emuladores abertos pelo atalho, com o AVD Menu aberto) |
 | Demora para abrir/fechar com snapshot de GBs | editar o AVD → Inicialização: *cold boot* (não carrega nem grava o snapshot: `-no-snapshot`) |
 | Janela em branco no Linux (NVIDIA) | o app já define `WEBKIT_DISABLE_DMABUF_RENDERER=1`; se persistir, abra uma issue com `avd-menu` rodando no terminal |
 

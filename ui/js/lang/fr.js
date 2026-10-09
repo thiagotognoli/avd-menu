@@ -190,6 +190,8 @@ export default {
   'form.sd.hint': "0 = pas de carte SD",
   'form.keyboard': "Utiliser le clavier de l’ordinateur",
   'form.frame': "Afficher le cadre de l’appareil",
+  'form.noblur': "Désactiver le flou des fenêtres",
+  'form.noblur.hint': "Avec le flou d’Android, la fenêtre de l’émulateur reste parfois figée sur une ancienne image (le toucher semble ne pas fonctionner). AVD Menu désactive le flou dans Android une fois le démarrage terminé, y compris depuis le raccourci, tant qu’AVD Menu est ouvert.",
   'form.id': "ID de l’AVD",
   'form.id.hint': "Nom utilisé dans les fichiers et en ligne de commande (sans espaces).",
   'edit.title': "Modifier {name}",

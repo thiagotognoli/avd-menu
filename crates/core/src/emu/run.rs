@@ -49,10 +49,35 @@ pub fn wm_class(avd_name: &str) -> String {
 /// Lista os emuladores ativos (inclusive os iniciados pelo Android Studio ou por
 /// um terminal), agrupados por nome de AVD.
 pub fn running() -> BTreeMap<String, Instance> {
-    match output_with_timeout(Command::new("ps").args(["-axww", "-o", "pid=,args="]), Duration::from_secs(5)) {
+    let mut found = match output_with_timeout(Command::new("ps").args(["-axww", "-o", "pid=,args="]), Duration::from_secs(5)) {
         Some(o) => parse_ps(&String::from_utf8_lossy(&o.stdout), std::process::id() as i32),
         None => BTreeMap::new(),
+    };
+    // Sem -port na linha de comando, a porta do console vem do arquivo que o
+    // emulador anuncia para o Android Studio (pid_<PID>.ini).
+    for inst in found.values_mut().filter(|i| i.port == 0) {
+        if let Some(port) =
+            inst.pids.iter().find_map(|p| std::fs::read_to_string(discovery_dir().join(format!("pid_{p}.ini"))).ok().and_then(|t| discovery_port(&t)))
+        {
+            inst.port = port;
+            inst.serial = format!("emulator-{port}");
+        }
     }
+    found
+}
+
+/// Onde o emulador anuncia as instâncias em execução.
+fn discovery_dir() -> PathBuf {
+    if platform::is_mac() {
+        return platform::home().join("Library/Caches/TemporaryItems/avd/running");
+    }
+    let run = std::env::var_os("XDG_RUNTIME_DIR").filter(|v| !v.is_empty()).map(PathBuf::from);
+    run.unwrap_or_else(|| PathBuf::from(format!("/run/user/{}", unsafe { libc::getuid() }))).join("avd/running")
+}
+
+/// `port.serial` de um pid_<PID>.ini.
+pub fn discovery_port(text: &str) -> Option<u32> {
+    text.lines().find_map(|l| l.trim().strip_prefix("port.serial=")).and_then(|v| v.trim().parse().ok())
 }
 
 fn is_emulator_binary(token: &str) -> bool {
@@ -316,6 +341,14 @@ pub fn stop(sdk: &Sdk, name: &str) -> Result<()> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn discovery_file() {
+        let t =
+            "grpc.port=8554\ncmdline=\"/sdk/emulator/qemu/linux-x86_64/qemu-system-x86_64\" \"-avd\" \"DEV\"\navd.name=DEV\nport.adb=5555\nport.serial=5554\n";
+        assert_eq!(discovery_port(t), Some(5554));
+        assert_eq!(discovery_port("avd.name=X\n"), None);
+    }
 
     #[test]
     fn parse_ps_output() {

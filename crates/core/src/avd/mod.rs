@@ -6,7 +6,8 @@ pub mod ini;
 pub mod skin;
 
 pub use create::{
-    build_config, create, fetch_skin_for_create, fetch_skin_for_update, gpu_card, update, view_of, write_raw_config, CreateSpec, Settings, View, GPU_KEY,
+    build_config, create, fetch_skin_for_create, fetch_skin_for_update, gpu_card, update, view_of, write_raw_config, CreateSpec, Settings, View, BLUR_KEY,
+    GPU_KEY,
 };
 pub use ini::Ini;
 

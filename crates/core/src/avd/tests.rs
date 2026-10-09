@@ -239,3 +239,25 @@ fn graphics_card_choice() {
     assert!(update(&sdk, "Placa", &Settings { gpu_card: Some("nvidia".into()), ..Default::default() }).is_err());
     delete("Placa").unwrap();
 }
+
+#[test]
+fn window_blur_option() {
+    let _g = crate::testutil::env_lock();
+    let (sdk, _) = fake_sdk();
+    create(&sdk, &CreateSpec { name: "Blur".into(), device_id: "pixel_8".into(), image_pkg: IMG.into(), ..Default::default() }).unwrap();
+    let key = || config("Blur").unwrap().0.get(BLUR_KEY).to_string();
+    // padrão: não mexe no Android
+    assert_eq!(key(), "");
+    assert!(crate::emu::guest::wanted("Blur").is_empty());
+    update(&sdk, "Blur", &Settings { disable_blur: Some(false), ..Default::default() }).unwrap();
+    assert_eq!(key(), "", "desmarcado sem nunca ter marcado continua sem mexer");
+
+    update(&sdk, "Blur", &Settings { disable_blur: Some(true), ..Default::default() }).unwrap();
+    assert!(view_of(&config("Blur").unwrap().0, "Blur").disable_blur);
+    assert_eq!(crate::emu::guest::wanted("Blur"), vec![("disable_window_blurs", "1")]);
+    // desmarcar religa o desfoque no Android
+    update(&sdk, "Blur", &Settings { disable_blur: Some(false), ..Default::default() }).unwrap();
+    assert!(!view_of(&config("Blur").unwrap().0, "Blur").disable_blur);
+    assert_eq!(crate::emu::guest::wanted("Blur"), vec![("disable_window_blurs", "0")]);
+    delete("Blur").unwrap();
+}

@@ -42,6 +42,8 @@ pub struct Settings {
     pub show_frame: Option<bool>,
     /// Placa de vídeo em que o emulador roda: integrated | dedicated
     pub gpu_card: Option<String>,
+    /// Desligar o desfoque de janelas do Android (ver `BLUR_KEY`).
+    pub disable_blur: Option<bool>,
     /// Sobrescreve chaves arbitrárias do config.ini (null apaga).
     pub extra: BTreeMap<String, Option<String>>,
 }
@@ -49,6 +51,12 @@ pub struct Settings {
 /// Chave do config.ini (nossa; o emulador ignora chaves que não conhece, como
 /// o showDeviceFrame) com a placa de vídeo padrão do AVD em máquinas com duas.
 pub const GPU_KEY: &str = "avdmenu.gpu";
+
+/// Desfoque de janelas do Android: "yes" = o AVD Menu desliga (ajuste
+/// disable_window_blurs do Android) a cada início; "no" = religa; ausente = não mexe.
+/// Com o desfoque, o emulador às vezes perde uma camada (“Failed to find
+/// ColorBuffer”) e a janela fica parada no último quadro.
+pub const BLUR_KEY: &str = "avdmenu.disableBlur";
 
 /// Placa de vídeo padrão do AVD: "dedicated" ou "integrated".
 pub fn gpu_card(cfg: &Ini) -> &'static str {
@@ -146,6 +154,12 @@ impl Settings {
         if let Some(v) = self.show_frame {
             cfg.set("showDeviceFrame", yesno(v));
         }
+        if let Some(v) = self.disable_blur {
+            // desmarcar grava "no" para religar no Android; sem a chave, não mexemos
+            if v || cfg.get(BLUR_KEY) == "yes" {
+                cfg.set(BLUR_KEY, yesno(v));
+            }
+        }
         if let Some(v) = &self.gpu_card {
             match v.as_str() {
                 "dedicated" => cfg.set(GPU_KEY, "dedicated"),
@@ -195,6 +209,7 @@ pub struct View {
     pub keyboard: bool,
     pub show_frame: bool,
     pub gpu_card: String,
+    pub disable_blur: bool,
 }
 
 fn or_default(v: &str, def: &str) -> String {
@@ -220,6 +235,7 @@ pub fn view_of(cfg: &Ini, name: &str) -> View {
         keyboard: cfg.get("hw.keyboard") == "yes",
         show_frame: cfg.get("showDeviceFrame") == "yes",
         gpu_card: gpu_card(cfg).to_string(),
+        disable_blur: cfg.get(BLUR_KEY) == "yes",
     }
 }
 

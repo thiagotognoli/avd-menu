@@ -190,6 +190,8 @@ export default {
   'form.sd.hint': "0 = tanpa kartu SD",
   'form.keyboard': "Gunakan keyboard komputer",
   'form.frame': "Tampilkan bingkai perangkat",
+  'form.noblur': "Matikan blur jendela",
+  'form.noblur.hint': "Dengan blur Android, jendela emulator kadang berhenti di frame lama (sentuhan seolah tidak berfungsi). AVD Menu mematikan blur di Android setelah selesai booting — juga saat dibuka dari pintasan, selama AVD Menu terbuka.",
   'form.id': "ID AVD",
   'form.id.hint': "Nama yang digunakan pada file dan baris perintah (tanpa spasi).",
   'edit.title': "Edit {name}",

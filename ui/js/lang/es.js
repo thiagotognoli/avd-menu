@@ -190,6 +190,8 @@ export default {
   'form.sd.hint': "0 = sin tarjeta SD",
   'form.keyboard': "Usar el teclado del equipo",
   'form.frame': "Mostrar el marco del dispositivo",
+  'form.noblur': "Desactivar el desenfoque de ventanas",
+  'form.noblur.hint': "Con el desenfoque de Android, la ventana del emulador a veces se queda congelada en un fotograma antiguo (el toque parece no funcionar). AVD Menu desactiva el desenfoque en Android cuando termina de iniciar, también si lo abres desde el acceso directo, siempre que AVD Menu esté abierto.",
   'form.id': "ID del AVD",
   'form.id.hint': "Nombre que se usa en archivos y en la línea de comandos (sin espacios).",
   'edit.title': "Editar {name}",

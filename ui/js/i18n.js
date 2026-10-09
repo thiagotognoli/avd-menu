@@ -122,6 +122,8 @@ const S = {
   'form.storage': ['Armazenamento interno', 'Internal storage'], 'form.storage.hint': ['Só vale para dados novos; não encolhe um AVD existente.', 'Applies to fresh data only; does not shrink an existing AVD.'],
   'form.sd': ['Cartão SD', 'SD card'], 'form.sd.hint': ['0 = sem cartão SD', '0 = no SD card'],
   'form.keyboard': ['Usar o teclado do computador', 'Use the computer keyboard'], 'form.frame': ['Mostrar moldura do aparelho', 'Show device frame'],
+  'form.noblur': ['Desligar o desfoque de janelas', 'Turn off window blur'],
+  'form.noblur.hint': ['Com o desfoque do Android, a janela do emulador às vezes fica parada num quadro antigo (o toque parece não funcionar). O AVD Menu desliga o desfoque no Android quando ele termina de iniciar — também se você abrir pelo atalho, desde que o AVD Menu esteja aberto.', 'With Android’s blur, the emulator window sometimes freezes on an old frame (touch seems not to work). AVD Menu turns blur off in Android once it finishes booting — also when started from the shortcut, as long as AVD Menu is open.'],
   'form.id': ['ID do AVD', 'AVD ID'], 'form.id.hint': ['Nome usado em arquivos e na linha de comando (sem espaços).', 'Name used in files and on the command line (no spaces).'],
 
   // editor

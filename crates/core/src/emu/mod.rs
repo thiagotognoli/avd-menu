@@ -3,6 +3,7 @@
 
 pub mod diag;
 pub mod gpu;
+pub mod guest;
 pub mod run;
 pub mod theme;
 

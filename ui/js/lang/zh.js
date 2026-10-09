@@ -190,6 +190,8 @@ export default {
   'form.sd.hint': "0 = 无 SD 卡",
   'form.keyboard': "使用计算机键盘",
   'form.frame': "显示设备边框",
+  'form.noblur': "关闭窗口模糊",
+  'form.noblur.hint': "启用 Android 模糊效果时，模拟器窗口有时会停在旧画面上（触摸似乎无效）。Android 启动完成后，AVD Menu 会关闭模糊效果；从快捷方式启动时也一样，只要 AVD Menu 处于打开状态。",
   'form.id': "AVD ID",
   'form.id.hint': "用于文件和命令行的名称（不含空格）。",
   'edit.title': "编辑 {name}",

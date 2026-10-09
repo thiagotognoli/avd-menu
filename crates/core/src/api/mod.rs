@@ -105,8 +105,19 @@ impl App {
         let app = self.clone();
         std::thread::spawn(move || {
             let mut prev: Option<Value> = None;
+            // emuladores (serial) já vistos: ajustes do Android aplicados uma vez por execução,
+            // inclusive nos abertos pelo atalho ou pelo Android Studio
+            let mut seen: std::collections::BTreeSet<String> = Default::default();
             loop {
-                let cur = serde_json::to_value(emu::running()).unwrap_or(Value::Null);
+                let running = emu::running();
+                for inst in running.values().filter(|i| !i.serial.is_empty()) {
+                    let key = format!("{}@{}@{:?}", inst.name, inst.serial, inst.pids);
+                    if seen.insert(key) {
+                        let (sd, name, serial) = (app.sdk(), inst.name.clone(), inst.serial.clone());
+                        std::thread::spawn(move || emu::guest::apply_when_booted(&sd, &name, &serial));
+                    }
+                }
+                let cur = serde_json::to_value(&running).unwrap_or(Value::Null);
                 if prev.as_ref() != Some(&cur) {
                     app.emit("running", cur.clone());
                     prev = Some(cur);

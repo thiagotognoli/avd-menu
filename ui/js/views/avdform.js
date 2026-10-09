@@ -57,6 +57,7 @@ export function avdForm(v, opts = {}) {
   const latency = select(['none', 'umts', 'edge', 'gprs'].map((x) => opt(x, x === 'none' ? t('form.lat.none') : x.toUpperCase())), v.netLatency, (x) => { s.netLatency = x; });
   const kb = h('input', { type: 'checkbox', checked: v.keyboard || null });
   const frame = h('input', { type: 'checkbox', checked: v.showFrame || null });
+  const noBlur = h('input', { type: 'checkbox', checked: v.disableBlur || null });
 
   const adv = h('details', { open: opts.advancedOpen || null, style: { marginTop: '18px' } },
     h('summary', { style: { cursor: 'pointer', fontWeight: 650, padding: '6px 0' } }, t('form.advanced')),
@@ -71,7 +72,9 @@ export function avdForm(v, opts = {}) {
         field(t('form.sd'), unit(sd, 'MB'), t('form.sd.hint'))),
       h('div', { class: 'row wrap', style: { gap: '28px' } },
         h('label', { class: 'check' }, kb, h('span', null, t('form.keyboard'))),
-        h('label', { class: 'check' }, frame, h('span', null, t('form.frame')))),
+        h('label', { class: 'check' }, frame, h('span', null, t('form.frame'))),
+        h('label', { class: 'check' }, noBlur, h('span', null, t('form.noblur')))),
+      h('div', { class: 'small muted', style: { marginTop: '-8px' } }, t('form.noblur.hint')),
       ...(opts.advancedExtra || []),
     ));
 
@@ -96,7 +99,7 @@ export function avdForm(v, opts = {}) {
         cameraFront: s.cameraFront, cameraBack: s.cameraBack, netSpeed: s.netSpeed, netLatency: s.netLatency,
         ramMB: posInt(ram), vmHeapMB: posInt(heap), cores: posInt(cores), dataMB: posInt(data),
         sdCardMB: Math.max(0, parseInt(sd.value, 10) || 0),
-        keyboard: kb.checked, showFrame: frame.checked,
+        keyboard: kb.checked, showFrame: frame.checked, disableBlur: noBlur.checked,
       };
       return out;
     },
