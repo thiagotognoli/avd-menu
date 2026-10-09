@@ -283,6 +283,8 @@ export default {
   'settings.emutheme.system': "سسٹم کے مطابق",
   'settings.emutheme.keep': "تبدیل نہ کریں",
   'settings.emutheme.hint': "ایمولیٹر کا ٹول بار اور توسیعی کنٹرولز۔ بعد میں شروع ہونے والے ایمولیٹرز پر لاگو ہوتا ہے۔",
+  'settings.noping': "GNOME کو ایمولیٹر منجمد کرنے سے روکیں",
+  'settings.noping.hint': "صرف ایمولیٹر کی ونڈوز کے لیے GNOME کی “جواب نہیں دے رہا” جانچ بند کرتا ہے: Wayland پر یہ انتباہ آنے تک ونڈو پر ماؤس روک دیتی ہے (mutter #3543)۔ جب تک AVD Menu کھلا ہو کام کرتا ہے۔",
   'settings.auto': "خودکار",
   'settings.light': "روشن",
   'settings.dark': "تاریک",

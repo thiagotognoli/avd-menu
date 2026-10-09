@@ -32,6 +32,11 @@ pub struct Config {
     /// "keep" (não mexe no que foi escolhido nas configurações do emulador).
     #[serde(skip_serializing_if = "String::is_empty")]
     pub emulator_theme: String,
+    /// Deixar o GNOME verificar se o emulador responde (_NET_WM_PING). Por
+    /// padrão o AVD Menu desliga essa verificação só nas janelas do emulador
+    /// (ver `emu::xwin`).
+    #[serde(skip_serializing_if = "std::ops::Not::not")]
+    pub emulator_gnome_ping: bool,
     /// Argumentos extras do emulador, por AVD.
     #[serde(skip_serializing_if = "BTreeMap::is_empty")]
     pub avd_extra_args: BTreeMap<String, String>,

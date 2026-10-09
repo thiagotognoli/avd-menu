@@ -283,6 +283,8 @@ export default {
   'settings.emutheme.system': "সিস্টেম অনুসরণ করুন",
   'settings.emutheme.keep': "পরিবর্তন করবেন না",
   'settings.emutheme.hint': "এমুলেটরের টুলবার ও এক্সটেন্ডেড কন্ট্রোল। পরে চালু করা এমুলেটরে প্রযোজ্য।",
+  'settings.noping': "GNOME যেন এমুলেটর আটকে না দেয়",
+  'settings.noping.hint': "শুধু এমুলেটরের উইন্ডোর জন্য GNOME-এর “সাড়া দিচ্ছে না” পরীক্ষা বন্ধ করে: Wayland-এ সতর্কবার্তা না আসা পর্যন্ত এটি উইন্ডোতে মাউস আটকে রাখে (mutter #3543)। AVD Menu খোলা থাকা পর্যন্ত কাজ করে।",
   'settings.auto': "স্বয়ংক্রিয়",
   'settings.light': "হালকা",
   'settings.dark': "গাঢ়",

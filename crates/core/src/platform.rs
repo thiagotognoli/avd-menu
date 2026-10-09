@@ -113,22 +113,40 @@ pub fn appimage_env_fixes(vars: &[(String, String)], real_home: Option<&str>) ->
     let mut out: Vec<(String, Option<String>)> = APPIMAGE_VARS.iter().filter(|k| get(k).is_some()).map(|k| (k.to_string(), None)).collect();
     let Some(appdir) = get("APPDIR").map(|d| d.trim_end_matches('/')).filter(|d| d.len() > 1) else { return out };
     let appimage = get("APPIMAGE").unwrap_or("");
+    // caminhos de dentro de um AppImage montado: o nosso e o de quem nos abriu
+    // (gerenciadores de AppImage também são AppImages)
+    let inside = |p: &str| p.starts_with(appdir) || p.starts_with("/tmp/.mount_");
     for (k, v) in vars {
-        if APPIMAGE_VARS.contains(&k.as_str()) {
+        if APPIMAGE_VARS.contains(&k.as_str()) || k.starts_with("HOST_") {
             continue;
         }
-        if !appimage.is_empty() && k == "XDG_CONFIG_HOME" && v.trim_end_matches('/') == format!("{appimage}.config") {
-            // o runtime guarda o valor original em HOST_XDG_CONFIG_HOME
-            out.push((k.clone(), get("HOST_XDG_CONFIG_HOME").map(str::to_string)));
+        if let Some(host) = get(&format!("HOST_{k}")) {
+            // o runtime (configuração portátil) guarda o valor de fora em HOST_*
+            if host != v {
+                out.push((k.clone(), Some(host.to_string())));
+            }
+        } else if !appimage.is_empty() && k == "XDG_CONFIG_HOME" && v.trim_end_matches('/') == format!("{appimage}.config") {
+            out.push((k.clone(), None));
         } else if !appimage.is_empty() && k == "HOME" && v.trim_end_matches('/') == format!("{appimage}.home") {
             if let Some(h) = real_home {
                 out.push((k.clone(), Some(h.to_string())));
             }
+        } else if k == "GSETTINGS_BACKEND" && matches!(v.as_str(), "keyfile" | "memory") {
+            // o AppRun troca o dconf por um arquivo próprio: o gsettings leria e
+            // gravaria outra configuração, não a do GNOME
+            out.push((k.clone(), None));
         } else if k == "GTK_THEME" && get("APPIMAGE_GTK_THEME") == Some(v.as_str()) {
             out.push((k.clone(), None));
-        } else if v.contains(appdir) {
-            let kept: Vec<&str> = v.split(':').filter(|p| !p.is_empty() && !p.starts_with(appdir)).collect();
+        } else if v.contains(appdir) || v.contains("/tmp/.mount_") {
+            let kept: Vec<&str> = v.split(':').filter(|p| !p.is_empty() && !inside(p)).collect();
             out.push((k.clone(), if kept.is_empty() { None } else { Some(kept.join(":")) }));
+        }
+    }
+    // HOST_* de uma variável que o AppImage apagou
+    for (k, v) in vars.iter().filter(|(k, _)| k.starts_with("HOST_")) {
+        let base = &k["HOST_".len()..];
+        if !base.is_empty() && !vars.iter().any(|(b, _)| b == base) && !v.is_empty() {
+            out.push((base.to_string(), Some(v.clone())));
         }
     }
     out
@@ -228,18 +246,36 @@ mod tests {
             v("XDG_CONFIG_HOME", "/home/u/Apps/AVD Menu.config"),
             v("HOST_XDG_CONFIG_HOME", "/home/u/.config"),
             v("HOME", "/home/u/Apps/AVD Menu.home"),
+            v("XDG_CACHE_HOME", "/home/u/.cache/AppImage-Cache"),
+            v("HOST_XDG_CACHE_HOME", "/home/u/.cache"),
+            v("HOST_XDG_STATE_HOME", "/home/u/.local/state"),
+            v("GSETTINGS_BACKEND", "keyfile"),
+            v("GIO_LAUNCH_DESKTOP", "/tmp/.mount_AppMaremp1152/bin/gio-launch-desktop"),
             v("DBUS_SESSION_BUS_ADDRESS", "unix:path=/run/user/1000/bus"),
             v("LANG", "pt_BR.UTF-8"),
         ];
         let fixes: std::collections::BTreeMap<String, Option<String>> = appimage_env_fixes(&vars, Some("/home/u")).into_iter().collect();
         let f = |k: &str| fixes.get(k).cloned();
-        for gone in ["APPDIR", "APPIMAGE", "OWD", "APPIMAGE_GTK_THEME", "GTK_THEME", "PYTHONHOME", "GTK_EXE_PREFIX", "QT_PLUGIN_PATH"] {
+        for gone in [
+            "APPDIR",
+            "APPIMAGE",
+            "OWD",
+            "APPIMAGE_GTK_THEME",
+            "GTK_THEME",
+            "PYTHONHOME",
+            "GTK_EXE_PREFIX",
+            "QT_PLUGIN_PATH",
+            "GSETTINGS_BACKEND",
+            "GIO_LAUNCH_DESKTOP",
+        ] {
             assert_eq!(f(gone), Some(None), "{gone}");
         }
         assert_eq!(f("PATH"), Some(Some("/home/u/bin:/usr/bin".into())));
         assert_eq!(f("XDG_DATA_DIRS"), Some(Some("/usr/share:/usr/local/share/".into())));
         assert_eq!(f("HOME"), Some(Some("/home/u".into())));
         assert_eq!(f("XDG_CONFIG_HOME"), Some(Some("/home/u/.config".into())), "volta ao valor de fora do AppImage");
+        assert_eq!(f("XDG_CACHE_HOME"), Some(Some("/home/u/.cache".into())));
+        assert_eq!(f("XDG_STATE_HOME"), Some(Some("/home/u/.local/state".into())), "HOST_* de variável apagada volta");
         // sem HOST_XDG_CONFIG_HOME, simplesmente some (o padrão é ~/.config)
         let sem: Vec<_> = vars.iter().filter(|(k, _)| k != "HOST_XDG_CONFIG_HOME").cloned().collect();
         assert!(appimage_env_fixes(&sem, None).contains(&("XDG_CONFIG_HOME".to_string(), None)));

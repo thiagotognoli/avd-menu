@@ -283,6 +283,8 @@ export default {
   'settings.emutheme.system': "跟随系统",
   'settings.emutheme.keep': "不更改",
   'settings.emutheme.hint': "模拟器的工具栏和扩展控件。对之后启动的模拟器生效。",
+  'settings.noping': "防止 GNOME 冻结模拟器",
+  'settings.noping.hint': "仅对模拟器窗口关闭 GNOME 的“未响应”检查：在 Wayland 下，它会在提示出现前阻止鼠标操作该窗口（mutter #3543）。在 AVD Menu 打开期间生效。",
   'settings.auto': "自动",
   'settings.light': "浅色",
   'settings.dark': "深色",

@@ -110,6 +110,10 @@ impl App {
             let mut seen: std::collections::BTreeSet<String> = Default::default();
             loop {
                 let running = emu::running();
+                if !running.is_empty() && !config::load().emulator_gnome_ping {
+                    let pids: Vec<i32> = running.values().flat_map(|i| i.pids.iter().copied()).collect();
+                    let _ = emu::xwin::disable_ping(&pids);
+                }
                 for inst in running.values().filter(|i| !i.serial.is_empty()) {
                     let key = format!("{}@{}@{:?}", inst.name, inst.serial, inst.pids);
                     if seen.insert(key) {
@@ -274,7 +278,7 @@ impl App {
                 "defaultRoot": sdk::default_root(),
             },
             "candidates": sdk::candidates(&cfg.sdk_root),
-            "config": {"showPreview": cfg.show_preview, "lang": cfg.lang, "theme": cfg.theme, "emulatorTheme": cfg.emulator_theme},
+            "config": {"showPreview": cfg.show_preview, "lang": cfg.lang, "theme": cfg.theme, "emulatorTheme": cfg.emulator_theme, "emulatorGnomePing": cfg.emulator_gnome_ping},
             "avdHome": avd::home(),
             "shortcuts": shortcut::supported(),
             "self": shortcut::self_info(),
@@ -296,6 +300,7 @@ impl App {
         let show = body.get("showPreview").and_then(Value::as_bool);
         let lang = body.get("lang").and_then(Value::as_str).filter(|l| l.is_empty() || crate::lang::normalize(l).is_some()).map(str::to_string);
         let theme = body.get("theme").and_then(Value::as_str).map(str::to_string);
+        let gnome_ping = body.get("emulatorGnomePing").and_then(Value::as_bool);
         let emu_theme = body.get("emulatorTheme").and_then(Value::as_str).filter(|t| matches!(*t, "" | "light" | "dark" | "keep")).map(str::to_string);
         config::update(|c| {
             if let Some(v) = show {
@@ -306,6 +311,9 @@ impl App {
             }
             if let Some(v) = theme {
                 c.theme = v;
+            }
+            if let Some(v) = gnome_ping {
+                c.emulator_gnome_ping = v;
             }
             if let Some(v) = emu_theme.clone() {
                 c.emulator_theme = v;

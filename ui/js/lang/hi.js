@@ -283,6 +283,8 @@ export default {
   'settings.emutheme.system': "सिस्टम के अनुसार",
   'settings.emutheme.keep': "न बदलें",
   'settings.emutheme.hint': "एमुलेटर का टूलबार और एक्सटेंडेड कंट्रोल। बाद में शुरू किए गए एमुलेटर पर लागू होता है।",
+  'settings.noping': "GNOME को एमुलेटर फ़्रीज़ करने से रोकें",
+  'settings.noping.hint': "सिर्फ़ एमुलेटर की विंडो के लिए GNOME की “जवाब नहीं दे रहा” जाँच बंद करता है: Wayland पर यह चेतावनी आने तक विंडो पर माउस रोक देती है (mutter #3543)। AVD Menu खुला रहने तक लागू रहता है।",
   'settings.auto': "स्वचालित",
   'settings.light': "लाइट",
   'settings.dark': "डार्क",

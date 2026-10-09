@@ -6,6 +6,7 @@ pub mod gpu;
 pub mod guest;
 pub mod run;
 pub mod theme;
+pub mod xwin;
 
 pub use diag::{diagnose, Check};
 pub use gpu::{dedicated_gpu_env, gpu_env, list_gpus, prefer_host_gpu, Gpu};

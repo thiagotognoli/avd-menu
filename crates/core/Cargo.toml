@@ -30,3 +30,6 @@ path = "src/bin/avd-menu-cli.rs"
 name = "devserver"
 path = "src/bin/devserver.rs"
 required-features = ["devserver"]
+
+[target.'cfg(target_os = "linux")'.dependencies]
+x11rb = "0.14.0"

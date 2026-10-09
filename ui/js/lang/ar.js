@@ -283,6 +283,8 @@ export default {
   'settings.emutheme.system': "اتباع النظام",
   'settings.emutheme.keep': "دون تغيير",
   'settings.emutheme.hint': "شريط أدوات المحاكي وعناصر التحكم الموسعة. يُطبَّق على المحاكيات التي تُشغَّل لاحقًا.",
+  'settings.noping': "منع GNOME من تجميد المحاكي",
+  'settings.noping.hint': "يوقف فحص GNOME «لا يستجيب» لنوافذ المحاكي فقط: في Wayland يحجب الفأرة عن النافذة حتى يظهر التنبيه (mutter #3543). يعمل ما دام AVD Menu مفتوحًا.",
   'settings.auto': "تلقائي",
   'settings.light': "فاتح",
   'settings.dark': "داكن",

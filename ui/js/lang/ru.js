@@ -283,6 +283,8 @@ export default {
   'settings.emutheme.system': "Как в системе",
   'settings.emutheme.keep': "Не менять",
   'settings.emutheme.hint': "Панель инструментов и расширенные элементы управления эмулятора. Применяется к эмуляторам, запущенным позже.",
+  'settings.noping': "Не давать GNOME замораживать эмулятор",
+  'settings.noping.hint': "Отключает проверку GNOME «не отвечает» только для окон эмулятора: в Wayland она блокирует мышь в окне до появления предупреждения (mutter #3543). Работает, пока открыт AVD Menu.",
   'settings.auto': "Автоматически",
   'settings.light': "Светлая",
   'settings.dark': "Тёмная",

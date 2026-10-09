@@ -164,6 +164,8 @@ const S = {
   // configurações
   'settings.title': ['Configurações', 'Settings'], 'settings.sdk': ['Android SDK', 'Android SDK'], 'settings.avdhome': ['Pasta dos AVDs', 'AVD folder'], 'settings.lang': ['Idioma', 'Language'], 'settings.theme': ['Tema', 'Theme'],
   'settings.emutheme': ['Tema do emulador', 'Emulator theme'], 'settings.emutheme.system': ['Seguir o sistema', 'Follow the system'], 'settings.emutheme.keep': ['Não alterar', 'Leave unchanged'],
+  'settings.noping': ['Evitar que o GNOME trave o emulador', 'Keep GNOME from freezing the emulator'],
+  'settings.noping.hint': ['Desliga, só nas janelas do emulador, a verificação de “não está respondendo” do GNOME: no Wayland ela bloqueia o mouse na janela até o aviso aparecer (mutter #3543). Vale enquanto o AVD Menu estiver aberto.', 'Turns off GNOME’s “not responding” check only for emulator windows: on Wayland it blocks the mouse on the window until the dialog appears (mutter #3543). Works while AVD Menu is open.'],
   'settings.emutheme.hint': ['Barra de ferramentas e controles estendidos do emulador. Vale para os emuladores abertos depois.', 'The emulator’s toolbar and extended controls. Applies to emulators started afterwards.'],
   'settings.auto': ['Automático', 'Automatic'], 'settings.light': ['Claro', 'Light'], 'settings.dark': ['Escuro', 'Dark'],
   'settings.self': ['AVD Menu no menu de aplicativos', 'AVD Menu in the application menu'], 'settings.self.on': ['O AVD Menu já aparece no menu de aplicativos.', 'AVD Menu already shows up in the application menu.'], 'settings.self.off': ['Adicione para abrir o AVD Menu como qualquer outro aplicativo.', 'Add it to open AVD Menu like any other application.'],

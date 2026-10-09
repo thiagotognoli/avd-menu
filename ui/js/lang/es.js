@@ -283,6 +283,8 @@ export default {
   'settings.emutheme.system': "Seguir el sistema",
   'settings.emutheme.keep': "No cambiar",
   'settings.emutheme.hint': "Barra de herramientas y controles extendidos del emulador. Se aplica a los emuladores que se inicien después.",
+  'settings.noping': "Evitar que GNOME congele el emulador",
+  'settings.noping.hint': "Desactiva, solo en las ventanas del emulador, la comprobación de “no responde” de GNOME: en Wayland bloquea el ratón en la ventana hasta que aparece el aviso (mutter #3543). Funciona mientras AVD Menu esté abierto.",
   'settings.auto': "Automático",
   'settings.light': "Claro",
   'settings.dark': "Oscuro",

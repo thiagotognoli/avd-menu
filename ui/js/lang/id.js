@@ -283,6 +283,8 @@ export default {
   'settings.emutheme.system': "Ikuti sistem",
   'settings.emutheme.keep': "Jangan ubah",
   'settings.emutheme.hint': "Toolbar dan kontrol lanjutan emulator. Berlaku untuk emulator yang dijalankan setelahnya.",
+  'settings.noping': "Cegah GNOME membekukan emulator",
+  'settings.noping.hint': "Mematikan pemeriksaan “tidak merespons” GNOME hanya untuk jendela emulator: di Wayland pemeriksaan ini memblokir mouse di jendela sampai peringatan muncul (mutter #3543). Berlaku selama AVD Menu terbuka.",
   'settings.auto': "Otomatis",
   'settings.light': "Terang",
   'settings.dark': "Gelap",
