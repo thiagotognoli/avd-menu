@@ -106,7 +106,7 @@ pub(crate) fn refresh(sdk: &Sdk, avd_name: &str) -> Result<bool> {
     std::fs::write(&path, b)?;
     validate(&path);
     if let Some(p) = platform::which("update-desktop-database") {
-        let _ = output_with_timeout(Command::new(p).arg(apps_dir()), Duration::from_secs(10));
+        let _ = output_with_timeout(platform::clean_env(Command::new(p).arg(apps_dir())), Duration::from_secs(10));
     }
     Ok(true)
 }
@@ -232,16 +232,16 @@ fn render(sdk: &Sdk, avd_name: &str, name: &str, icon_name: &str) -> (String, bo
 /// Roda o desktop-file-validate, se existir (só para avisar no stderr).
 pub(crate) fn validate(path: &Path) {
     if let Some(p) = platform::which("desktop-file-validate") {
-        let _ = output_with_timeout(Command::new(p).arg(path), Duration::from_secs(5));
+        let _ = output_with_timeout(platform::clean_env(Command::new(p).arg(path)), Duration::from_secs(5));
     }
 }
 
 pub(crate) fn refresh_caches() {
     if let Some(p) = platform::which("update-desktop-database") {
-        let _ = output_with_timeout(Command::new(p).arg(apps_dir()), Duration::from_secs(10));
+        let _ = output_with_timeout(platform::clean_env(Command::new(p).arg(apps_dir())), Duration::from_secs(10));
     }
     if let Some(p) = platform::which("gtk-update-icon-cache") {
-        let _ = output_with_timeout(Command::new(p).args(["-f", "-t"]).arg(icons_dir()), Duration::from_secs(10));
+        let _ = output_with_timeout(platform::clean_env(Command::new(p).args(["-f", "-t"]).arg(icons_dir())), Duration::from_secs(10));
     }
 }
 

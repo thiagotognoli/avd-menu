@@ -291,7 +291,7 @@ pub fn stop(sdk: &Sdk, name: &str) -> Result<()> {
     };
     STOP_REQUESTS.lock().unwrap_or_else(|e| e.into_inner()).insert(name.to_string(), Instant::now());
     if !inst.serial.is_empty() && sdk.has_adb() {
-        let ok = output_with_timeout(Command::new(sdk.adb()).args(["-s", &inst.serial, "emu", "kill"]), Duration::from_secs(8))
+        let ok = output_with_timeout(platform::clean_env(Command::new(sdk.adb()).args(["-s", &inst.serial, "emu", "kill"])), Duration::from_secs(8))
             .map(|o| o.status.success())
             .unwrap_or(false);
         if ok && wait_gone(name, Duration::from_secs(12)) {
