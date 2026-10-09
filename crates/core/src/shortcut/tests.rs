@@ -115,6 +115,29 @@ fn refresh_follows_the_boot_mode() {
 }
 
 #[test]
+fn shortcut_calls_avd_menu_when_installed() {
+    if !platform::is_linux() {
+        return;
+    }
+    let _g = crate::testutil::env_lock();
+    let (sdk, _) = setup();
+    std::env::set_var("AVD_MENU_LAUNCHER", "/opt/AVD Menu/AVD Menu");
+    let res = create(&sdk, &Options { avd: "My_AVD".into(), ..Default::default() });
+    std::env::remove_var("AVD_MENU_LAUNCHER");
+    let txt = fs::read_to_string(res.unwrap().path).unwrap();
+    let root = sdk.root.to_string_lossy();
+    let execs: Vec<&str> = txt.lines().filter(|l| l.starts_with("Exec=")).collect();
+    let base = format!("\"/opt/AVD Menu/AVD Menu\" --sdk {} launch My_AVD", exec_quote(&root));
+    assert!(execs[0].ends_with(&base), "{txt}");
+    assert!(execs.iter().any(|l| l.ends_with(&format!("{base} --cold"))), "{txt}");
+    assert!(execs.iter().any(|l| l.ends_with(&format!("{base} --wipe"))), "{txt}");
+    // quem inicia é o AVD Menu: nada de argumentos do emulador na linha
+    assert!(!txt.contains("-no-snapshot-load") && !txt.contains("RESOURCE_NAME="), "{txt}");
+    assert!(txt.contains("StartupWMClass=android-emulator-my-avd"), "{txt}");
+    remove("My_AVD").unwrap();
+}
+
+#[test]
 fn self_install() {
     if !platform::is_linux() {
         return;

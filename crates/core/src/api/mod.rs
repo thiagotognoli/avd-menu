@@ -105,20 +105,15 @@ impl App {
         let app = self.clone();
         std::thread::spawn(move || {
             let mut prev: Option<Value> = None;
-            // emuladores (serial) já vistos: ajustes do Android aplicados uma vez por execução,
-            // inclusive nos abertos pelo atalho ou pelo Android Studio
-            let mut seen: std::collections::BTreeSet<String> = Default::default();
+            // execuções já tratadas: ajustes do Android aplicados uma vez por execução,
+            // inclusive nos emuladores abertos pelo Android Studio ou por um terminal
+            let mut applied = Default::default();
             loop {
                 let running = emu::running();
-                if !running.is_empty() && !config::load().emulator_gnome_ping {
-                    let pids: Vec<i32> = running.values().flat_map(|i| i.pids.iter().copied()).collect();
-                    let _ = emu::xwin::disable_ping(&pids);
-                }
-                for inst in running.values().filter(|i| !i.serial.is_empty()) {
-                    let key = format!("{}@{}@{:?}", inst.name, inst.serial, inst.pids);
-                    if seen.insert(key) {
-                        let (sd, name, serial) = (app.sdk(), inst.name.clone(), inst.serial.clone());
-                        std::thread::spawn(move || emu::guest::apply_when_booted(&sd, &name, &serial));
+                if !running.is_empty() {
+                    let sd = app.sdk();
+                    for inst in running.values() {
+                        emu::watch::tick(&sd, &inst.name, &inst.pids, &inst.serial, &mut applied);
                     }
                 }
                 let cur = serde_json::to_value(&running).unwrap_or(Value::Null);

@@ -153,6 +153,31 @@ fn render(sdk: &Sdk, avd_name: &str, name: &str, icon_name: &str) -> (String, bo
         let a = argv(extra);
         exec_line(envs, &a.iter().map(String::as_str).collect::<Vec<_>>())
     };
+    let mut oenvs = base.clone();
+    oenvs.extend(other_gpu.iter().map(|(k, v)| format!("{k}={v}")));
+    // Com o AVD Menu instalado, o atalho o chama (`launch`): ele inicia o emulador
+    // como o app faz e fica acompanhando até fechar (ver emu::watch). Sem ele, o
+    // atalho chama o emulador direto.
+    let launcher = super::launcher();
+    let other_card = if dedicated_default { "integrated" } else { "dedicated" };
+    // `flags`: --cold / --wipe; `other`: na placa que não é a padrão do AVD
+    let exec = |flags: &[&str], other: bool| -> String {
+        match &launcher {
+            Some(exe) => {
+                let mut a = vec![exe.to_string_lossy().into_owned(), "--sdk".into(), sdk.root.to_string_lossy().into_owned(), "launch".into(), opt.avd.clone()];
+                a.extend(flags.iter().map(|f| f.to_string()));
+                if other {
+                    a.extend(["--gpu".to_string(), other_card.to_string()]);
+                }
+                let keep: Vec<String> = base.iter().filter(|e| e.starts_with("ANDROID_AVD_HOME=")).cloned().collect();
+                exec_line(&keep, &a.iter().map(String::as_str).collect::<Vec<_>>())
+            }
+            None => {
+                let extra: Vec<&str> = flags.iter().map(|f| if *f == "--wipe" { "-wipe-data" } else { "-no-snapshot-load" }).collect();
+                line(if other { &oenvs } else { &envs }, &extra)
+            }
+        }
+    };
 
     // (ação, nome em inglês, nome em português) para iniciar na outra placa
     let (other, other_cold) = if dedicated_default {
@@ -187,7 +212,7 @@ fn render(sdk: &Sdk, avd_name: &str, name: &str, icon_name: &str) -> (String, bo
     for l in localized("Comment", "Inicia o emulador Android {}", "Starts the Android emulator {}", Some(&opt.avd)) {
         w(l);
     }
-    w(format!("Exec={}", line(&envs, &[])));
+    w(format!("Exec={}", exec(&[], false)));
     w(format!("Icon={icon_name}"));
     w("Terminal=false".into());
     w("Categories=Development;IDE;".into());
@@ -202,28 +227,26 @@ fn render(sdk: &Sdk, avd_name: &str, name: &str, icon_name: &str) -> (String, bo
     for l in localized("Name", "Iniciar com cold boot", "Cold boot", None) {
         w(l);
     }
-    w(format!("Exec={}", line(&envs, &["-no-snapshot-load"])));
+    w(format!("Exec={}", exec(&["--cold"], false)));
     w(String::new());
     w("[Desktop Action wipe-data]".into());
     w("Name=Wipe data and start".into());
     for l in localized("Name", "Iniciar apagando os dados", "Wipe data and start", None) {
         w(l);
     }
-    w(format!("Exec={}", line(&envs, &["-wipe-data"])));
+    w(format!("Exec={}", exec(&["--wipe"], false)));
     if two_cards {
         // O GNOME oferece “Iniciar usando placa de vídeo dedicada” sozinho, mas só
         // enquanto considera o app parado — com o atalho vinculado à janela o item
         // some quando o emulador sobe. Estas ações ficam sempre disponíveis.
-        let mut oenvs = base;
-        oenvs.extend(other_gpu.iter().map(|(k, v)| format!("{k}={v}")));
-        for ((id, en, pt), extra) in [(other, &[][..]), (other_cold, &["-no-snapshot-load"][..])] {
+        for ((id, en, pt), flags) in [(other, &[][..]), (other_cold, &["--cold"][..])] {
             w(String::new());
             w(format!("[Desktop Action {id}]"));
             w(format!("Name={en}"));
             for l in localized("Name", pt, en, None) {
                 w(l);
             }
-            w(format!("Exec={}", line(&oenvs, extra)));
+            w(format!("Exec={}", exec(flags, true)));
         }
     }
     (b, two_cards)

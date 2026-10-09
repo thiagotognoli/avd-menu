@@ -6,6 +6,7 @@ pub mod gpu;
 pub mod guest;
 pub mod run;
 pub mod theme;
+pub mod watch;
 pub mod xwin;
 
 pub use diag::{diagnose, Check};

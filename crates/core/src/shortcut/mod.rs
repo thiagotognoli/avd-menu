@@ -62,6 +62,21 @@ pub fn desktop_id(avd_name: &str) -> String {
     format!("android-emulator-{}", platform::slugify(avd_name))
 }
 
+/// O AVD Menu que os atalhos chamam (`avd-menu launch`): o AppImage, ou o
+/// executável instalado (.deb). None (atalho chama o emulador direto) quando
+/// rodando de uma pasta de compilação. `AVD_MENU_LAUNCHER` força um caminho.
+pub(crate) fn launcher() -> Option<PathBuf> {
+    if let Some(p) = std::env::var_os("AVD_MENU_LAUNCHER").filter(|v| !v.is_empty()) {
+        return Some(PathBuf::from(p));
+    }
+    if let Some(p) = std::env::var_os("APPIMAGE").map(PathBuf::from).filter(|p| platform::file_exists(p)) {
+        return Some(p);
+    }
+    let exe = std::env::current_exe().ok()?.canonicalize().ok()?;
+    let installed = exe.file_name().is_some_and(|n| n == "avd-menu") && !exe.components().any(|c| c.as_os_str() == "target");
+    installed.then_some(exe)
+}
+
 pub(crate) fn apps_dir() -> PathBuf {
     platform::data_home().join("applications")
 }

@@ -158,6 +158,8 @@ pub fn run(args: &[String]) -> Option<i32> {
         "ui" | "gui" => return None,
         "list" | "ls" => cmd_list(rest),
         "start" | "run" => cmd_start(rest),
+        // usado pelos atalhos (não aparece na ajuda): inicia e acompanha até fechar
+        "launch" => cmd_launch(rest),
         "stop" => cmd_stop(rest),
         "create" => cmd_create(rest),
         "shortcut" => cmd_shortcut(rest),
@@ -260,6 +262,36 @@ fn cmd_start(args: &[String]) -> i32 {
         }
         Err(e) => fail(e.message),
     }
+}
+
+/// `avd-menu launch NOME [--cold|--wipe] [--gpu dedicated|integrated]`: o que os
+/// atalhos do menu executam. Inicia o emulador como o app faz e fica aberto,
+/// sem janela, até ele fechar, fazendo o que o app faria com ele aberto
+/// (`emu::watch`): tirar o _NET_WM_PING das janelas, ajustes do Android.
+fn cmd_launch(args: &[String]) -> i32 {
+    let p = match parse(args, &["gpu"], &["cold", "wipe"]) {
+        Ok(p) => p,
+        Err(e) => return fail(e),
+    };
+    let Some(name) = p.pos.first() else { return fail(tr("informe o nome do AVD", "give the AVD name")) };
+    let mut opt = emu::StartOptions { gpu: p.val("gpu").unwrap_or("").to_string(), ..Default::default() };
+    if p.has("wipe") {
+        opt.mode = "wipe".into();
+    } else if p.has("cold") {
+        opt.mode = "cold".into();
+    }
+    if let Some(extra) = config::load().avd_extra_args.get(name) {
+        opt.extra_args = crate::api::split_args(extra);
+    }
+    let sdk = current_sdk();
+    match emu::start(&sdk, name, &opt) {
+        Ok(_) => {}
+        // já aberto (o GNOME traz a janela para a frente): acompanha do mesmo jeito
+        Err(e) if e.status == 409 => {}
+        Err(e) => return fail(e.message),
+    }
+    emu::watch::until_closed(&sdk, name);
+    0
 }
 
 fn cmd_stop(args: &[String]) -> i32 {
